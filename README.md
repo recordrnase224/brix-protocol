@@ -1,11 +1,19 @@
+<div align="center">
+
+# BRIX — Balance-Reliability IndeX
+
+**Runtime Reliability Infrastructure for LLM Pipelines**
+
+_Enforce deterministic rules. Measure the Balance Index. Audit every decision._
+
 [![PyPI version](https://img.shields.io/pypi/v/brix-protocol)](https://pypi.org/project/brix-protocol/)
-[![Python](https://img.shields.io/pypi/pyversions/brix-protocol)](https://pypi.org/project/brix-protocol/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-80%25-green.svg)]()
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)]()
 
-# BRIX
+</div>
 
-**Runtime Reliability Infrastructure for LLM Pipelines.**
+---
 
 BRIX wraps any LLM client and enforces deterministic reliability rules defined in a declarative `uncertainty.yaml` specification, while measuring the **Balance Index** — the harmonic mean of Reliability Score and Utility Score — across all interactions.
 
@@ -26,6 +34,7 @@ pip install brix-protocol
 ```
 
 With LLM provider support:
+
 ```bash
 pip install brix-protocol[openai]      # OpenAI adapter
 pip install brix-protocol[anthropic]   # Anthropic adapter
@@ -51,6 +60,7 @@ asyncio.run(main())
 ```
 
 Run the full quickstart with three scenarios:
+
 ```bash
 python examples/quickstart.py
 ```
@@ -72,11 +82,11 @@ Balance Index = 2 * R * U / (R + U)
 
 The harmonic mean punishes imbalance. A system that blocks everything gets R=1.0 but U=0.0, yielding a Balance Index of 0.0. A system that blocks nothing gets U=1.0 but R=0.0, also yielding 0.0. Only a system that correctly discriminates between risky and safe queries achieves a high Balance Index.
 
-| Balance Index | Interpretation |
-|---|---|
-| > 0.85 | Well-calibrated specification |
-| 0.70 – 0.85 | Acceptable, room for improvement |
-| < 0.70 | Significant miscalibration — review before production |
+| Balance Index | Interpretation                                        |
+| ------------- | ----------------------------------------------------- |
+| > 0.85        | Well-calibrated specification                         |
+| 0.70 – 0.85   | Acceptable, room for improvement                      |
+| < 0.70        | Significant miscalibration — review before production |
 
 ---
 
@@ -98,23 +108,23 @@ risk_score = max(registered_signals) * 1.0
 
 The risk score maps to a sampling tier:
 
-| Tier | Score | Samples |
-|---|---|---|
-| LOW | ≤ 0.40 | 1 |
-| MEDIUM | ≤ 0.70 | 2 |
-| HIGH | > 0.70 | 3 |
-| CIRCUIT BREAKER | — | 3 + force_retrieval |
+| Tier            | Score  | Samples             |
+| --------------- | ------ | ------------------- |
+| LOW             | ≤ 0.40 | 1                   |
+| MEDIUM          | ≤ 0.70 | 2                   |
+| HIGH            | > 0.70 | 3                   |
+| CIRCUIT BREAKER | —      | 3 + force_retrieval |
 
 ### Adaptive Sampling
 
 Multiple samples are collected **in parallel** via `asyncio.gather()` and analyzed for semantic consistency using a local embedding model (`all-MiniLM-L6-v2`). The consistency pattern determines the uncertainty type:
 
-| Pattern | Classification | Action |
-|---|---|---|
-| High consistency, no refusals | CERTAIN | Passthrough |
-| High consistency, refusals in ≥2 samples | EPISTEMIC | Force retrieval |
-| Very low consistency (< 0.45) | CONTRADICTORY | Conflict resolution |
-| Moderate consistency, high variance | OPEN_ENDED | Distribution response |
+| Pattern                                  | Classification | Action                |
+| ---------------------------------------- | -------------- | --------------------- |
+| High consistency, no refusals            | CERTAIN        | Passthrough           |
+| High consistency, refusals in ≥2 samples | EPISTEMIC      | Force retrieval       |
+| Very low consistency (< 0.45)            | CONTRADICTORY  | Conflict resolution   |
+| Moderate consistency, high variance      | OPEN_ENDED     | Distribution response |
 
 ### StructuredResult
 
@@ -129,7 +139,7 @@ BRIX behavior is defined declaratively in YAML specifications:
 ```yaml
 metadata:
   name: my-domain
-  version: "1.0.0"
+  version: '1.0.0'
   domain: healthcare
   model_compatibility:
     - model_family: gpt-4
@@ -138,24 +148,24 @@ metadata:
 circuit_breakers:
   - name: drug_dosing
     patterns:
-      - "lethal dose"
-      - "maximum dose"
-      - "mg per kg"
+      - 'lethal dose'
+      - 'maximum dose'
+      - 'mg per kg'
     exclude_context:
-      - "pharmacology textbook"
-      - "educational context"
+      - 'pharmacology textbook'
+      - 'educational context'
 
 risk_signals:
   - name: factual_claims
     patterns:
-      - "studies show"
-      - "research proves"
+      - 'studies show'
+      - 'research proves'
     weight: 0.7
     category: registered
   - name: specific_numbers
     patterns:
-      - "exactly"
-      - "precisely"
+      - 'exactly'
+      - 'precisely'
     weight: 0.5
     category: universal
 
@@ -163,7 +173,7 @@ uncertainty_types:
   - name: epistemic
     action_config:
       action: force_retrieval
-      message_template: "Retrieval needed for verified information."
+      message_template: 'Retrieval needed for verified information.'
   - name: contradictory
     action_config:
       action: conflict_resolution
@@ -179,13 +189,13 @@ sampling_config:
 
 ### Schema Reference
 
-| Section | Required | Description |
-|---|---|---|
-| `metadata` | Yes | Name, version, domain, model compatibility records |
-| `circuit_breakers` | No | Binary rules with patterns and optional exclude_context |
-| `risk_signals` | No | Weighted signals (registered or universal) with exclude_context |
-| `uncertainty_types` | No | Per-type action configuration |
-| `sampling_config` | No | Tier thresholds and sampling parameters (sensible defaults) |
+| Section             | Required | Description                                                     |
+| ------------------- | -------- | --------------------------------------------------------------- |
+| `metadata`          | Yes      | Name, version, domain, model compatibility records              |
+| `circuit_breakers`  | No       | Binary rules with patterns and optional exclude_context         |
+| `risk_signals`      | No       | Weighted signals (registered or universal) with exclude_context |
+| `uncertainty_types` | No       | Per-type action configuration                                   |
+| `sampling_config`   | No       | Tier thresholds and sampling parameters (sensible defaults)     |
 
 ---
 
@@ -249,33 +259,61 @@ brix generate-tests specs/general/v1.0.0.yaml --output generated_tests/
 
 ## Comparison
 
-| Feature | BRIX | NeMo Guardrails | Guardrails AI | Cleanlab TLM |
-|---|---|---|---|---|
-| **Approach** | Declarative infrastructure | Programmable rails | Output validation | Trustworthiness scoring |
-| **Balance Index** | Built-in metric | No equivalent | No equivalent | Confidence score (different concept) |
-| **Circuit breakers** | Deterministic, O(n) | LLM-based | No | No |
-| **Pattern matching** | Aho-Corasick automaton | LLM classification | Regex/validators | N/A |
-| **Uncertainty types** | 3 types with distinct actions | Not classified | Not classified | Not classified |
-| **Audit trail** | StructuredResult + brix explain | Logging | Logging | API logs |
-| **Spec format** | Declarative YAML | Colang | Python/RAIL | API config |
-| **Model agnostic** | Any LLM via Protocol | NVIDIA focused | Any LLM | Any LLM |
-| **Local embedding** | all-MiniLM-L6-v2 (no API cost) | LLM-based (API cost) | N/A | API-based |
+| Feature               | BRIX                            | NeMo Guardrails      | Guardrails AI     | Cleanlab TLM                         |
+| --------------------- | ------------------------------- | -------------------- | ----------------- | ------------------------------------ |
+| **Approach**          | Declarative infrastructure      | Programmable rails   | Output validation | Trustworthiness scoring              |
+| **Balance Index**     | Built-in metric                 | No equivalent        | No equivalent     | Confidence score (different concept) |
+| **Circuit breakers**  | Deterministic, O(n)             | LLM-based            | No                | No                                   |
+| **Pattern matching**  | Aho-Corasick automaton          | LLM classification   | Regex/validators  | N/A                                  |
+| **Uncertainty types** | 3 types with distinct actions   | Not classified       | Not classified    | Not classified                       |
+| **Audit trail**       | StructuredResult + brix explain | Logging              | Logging           | API logs                             |
+| **Spec format**       | Declarative YAML                | Colang               | Python/RAIL       | API config                           |
+| **Model agnostic**    | Any LLM via Protocol            | NVIDIA focused       | Any LLM           | Any LLM                              |
+| **Local embedding**   | all-MiniLM-L6-v2 (no API cost)  | LLM-based (API cost) | N/A               | API-based                            |
 
 ---
 
 ## Use Cases
 
 ### Medical Information Systems
+
 Circuit breakers on drug interactions, dosing, contraindications. Retrieval always activated for clinical queries. Audit trail for regulatory compliance.
 
 ### Legal Research Platforms
+
 Circuit breakers on jurisdictional requirements, statute of limitations. Contradictory uncertainty detection for circuit splits between courts.
 
 ### Financial Services Compliance
+
 Circuit breakers on regulatory thresholds, reporting requirements. Balance Index monitoring ensures compliance officers can still get useful answers.
 
 ### Enterprise Knowledge Management
+
 Lower-stakes circuit breakers on HR policies, legal obligations. High utility preservation for general knowledge queries.
+
+---
+
+## Built-in Specifications
+
+BRIX ships with five ready-to-use domain specifications:
+
+| Spec | Domain | Circuit Breakers | Risk Signals | Balance Index |
+| --- | --- | --- | --- | --- |
+| `general/v1.0.0` | General purpose | 3 | 7 | 0.873 |
+| `medical/v1.0.0` | Medical / FDA-aligned | 6 | 8 | 0.884 |
+| `legal/v1.0.0` | Legal research | 5 | 7 | 0.895 |
+| `finance/v1.0.0` | Financial services | 5 | 8 | 0.894 |
+| `hr/v1.0.0` | Human resources | 4 | 6 | 0.889 |
+
+Load any spec by path:
+
+```python
+from brix.spec.defaults import get_medical_spec_path
+from brix import BrixRouter, load_spec
+
+spec = load_spec(get_medical_spec_path())
+router = BrixRouter(llm_client=client, spec=spec)
+```
 
 ---
 
@@ -324,6 +362,7 @@ pytest
 ```
 
 Before submitting a PR:
+
 1. Run `brix lint` on any modified specs
 2. Ensure `pytest --cov=brix` reports ≥80% coverage
 3. Add tests for new functionality

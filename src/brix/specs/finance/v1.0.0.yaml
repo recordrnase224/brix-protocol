@@ -1,0 +1,245 @@
+metadata:
+  name: finance
+  version: "1.0.0"
+  domain: finance
+  description: >
+    BRIX specification for financial advisory, compliance, and trading
+    systems. Enforces circuit breakers on investment advice, insider
+    information, regulatory thresholds, market manipulation, and fraud
+    facilitation. This is not financial advice. Consult a qualified
+    financial advisor before making investment decisions.
+  model_compatibility:
+    - model_family: gpt-4
+      status: community
+      notes: "Community-tested with GPT-4 for financial information queries"
+    - model_family: claude-3
+      status: community
+      notes: "Community-tested with Claude 3 for financial analysis"
+
+circuit_breakers:
+  - name: investment_advice
+    description: >
+      Fires on queries where the model might provide specific buy/sell
+      recommendations or guaranteed return claims.
+    patterns:
+      - "you should buy"
+      - "I recommend buying"
+      - "invest in this"
+      - "guaranteed return"
+      - "sure profit"
+    exclude_context:
+      - "investment education"
+      - "financial literacy course"
+      - "textbook example"
+      - "historical case"
+
+  - name: insider_information
+    description: >
+      Fires on queries involving non-public material information that
+      could facilitate illegal insider trading.
+    patterns:
+      - "insider information"
+      - "non-public information"
+      - "before the announcement"
+      - "material non-public"
+    exclude_context:
+      - "SEC regulation overview"
+      - "compliance training"
+      - "what is insider trading"
+      - "legal definition"
+
+  - name: regulatory_thresholds
+    description: >
+      Fires on queries about specific regulatory reporting thresholds
+      where incorrect information causes compliance violations.
+    patterns:
+      - "reporting threshold"
+      - "SAR required"
+      - "BSA requirement"
+      - "FINRA rule"
+      - "SEC requirement"
+    exclude_context:
+      - "regulatory overview"
+      - "compliance education"
+      - "general framework"
+      - "how regulations work"
+
+  - name: market_manipulation
+    description: >
+      Fires on queries that describe or seek strategies for illegal
+      market manipulation.
+    patterns:
+      - "pump and dump"
+      - "short squeeze strategy"
+      - "coordinated buying"
+      - "manipulate price"
+    exclude_context:
+      - "market abuse education"
+      - "enforcement case study"
+      - "SEC enforcement"
+      - "historical example"
+
+  - name: fraud_facilitation
+    description: >
+      Fires on queries seeking methods to evade financial reporting
+      or launder money.
+    patterns:
+      - "how to hide"
+      - "avoid detection"
+      - "launder money"
+      - "evade reporting"
+    exclude_context:
+      - "anti-fraud training"
+      - "AML compliance"
+      - "fraud detection methods"
+      - "law enforcement"
+
+risk_signals:
+  - name: specific_amounts
+    description: "Queries referencing specific dollar amounts or transaction limits"
+    patterns:
+      - "exact dollar amount"
+      - "threshold amount"
+      - "transaction limit"
+    weight: 0.7
+    category: registered
+    exclude_context:
+      - "general example"
+      - "hypothetical"
+
+  - name: return_claims
+    description: "Queries involving specific return projections or guarantees"
+    patterns:
+      - "risk-free investment"
+      - "certain profit"
+      - "projected return of"
+      - "annualized return"
+    weight: 0.8
+    category: registered
+    exclude_context:
+      - "investment basics"
+      - "financial literacy"
+
+  - name: regulatory_references
+    description: "Queries citing specific financial regulatory bodies or rules"
+    patterns:
+      - "SEC"
+      - "FINRA"
+      - "CFTC"
+      - "Dodd-Frank"
+    weight: 0.8
+    category: registered
+    exclude_context:
+      - "regulatory overview"
+      - "history of regulation"
+      - "general information"
+
+  - name: tax_implications
+    description: "Queries about specific tax liabilities or deduction rules"
+    patterns:
+      - "tax liability"
+      - "capital gains"
+      - "tax deduction"
+      - "IRS requirement"
+    weight: 0.7
+    category: registered
+    exclude_context:
+      - "tax basics"
+      - "educational overview"
+
+  - name: trading_signals
+    description: "Queries about specific trading signals or price targets"
+    patterns:
+      - "buy signal"
+      - "sell signal"
+      - "price target"
+      - "resistance level"
+    weight: 0.6
+    category: registered
+    exclude_context:
+      - "technical analysis basics"
+      - "how charts work"
+
+  - name: credit_risk
+    description: "Queries about credit scoring or default risk assessment"
+    patterns:
+      - "credit score"
+      - "default risk"
+      - "creditworthiness"
+      - "debt-to-income"
+    weight: 0.7
+    category: universal
+    exclude_context:
+      - "how credit works"
+      - "general overview"
+      - "financial literacy"
+
+  - name: derivatives
+    description: "Queries about complex derivative instruments and leverage"
+    patterns:
+      - "options contract"
+      - "futures"
+      - "margin call"
+      - "short selling"
+    weight: 0.8
+    category: registered
+    exclude_context:
+      - "what are derivatives"
+      - "investing basics"
+
+  - name: aml_kyc
+    description: "Queries about anti-money laundering and know-your-customer requirements"
+    patterns:
+      - "beneficial owner"
+      - "politically exposed"
+      - "source of funds"
+    weight: 0.9
+    category: registered
+    exclude_context:
+      - "compliance training"
+      - "AML overview"
+
+uncertainty_types:
+  - name: epistemic
+    description: >
+      The model lacks verified financial knowledge. Forces retrieval
+      from authoritative financial and regulatory sources.
+    action_config:
+      action: force_retrieval
+      force_retrieval: true
+      message_template: >
+        This query requires verified financial information. Let me retrieve
+        authoritative sources to provide an accurate response. This is not
+        financial advice. Consult a qualified financial advisor before
+        making investment decisions.
+
+  - name: contradictory
+    description: >
+      Conflicting financial information or analyst opinions detected.
+    action_config:
+      action: conflict_resolution
+      message_template: >
+        Conflicting financial information has been identified. Here is an
+        analysis of the different positions. This is not financial advice.
+        Consult a qualified financial advisor before making investment
+        decisions.
+
+  - name: open_ended
+    description: >
+      Financial question with multiple valid strategies or interpretations.
+    action_config:
+      action: distribution_response
+      message_template: >
+        This financial question has multiple valid approaches. Here are
+        the main positions and conditions. This is not financial advice.
+        Consult a qualified financial advisor before making investment
+        decisions.
+
+sampling_config:
+  low_threshold: 0.35
+  medium_threshold: 0.60
+  low_samples: 1
+  medium_samples: 2
+  high_samples: 3
+  circuit_breaker_samples: 3
+  temperature: 0.7

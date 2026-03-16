@@ -17,6 +17,12 @@ from brix.core.result import ActionTaken, StructuredResult, UncertaintyType
 from brix.core.router import BrixRouter
 from brix.llm.mock import MockLLMClient
 from brix.llm.protocol import LLMClient
+from brix.spec.defaults import (
+    FINANCE_SPEC_PATH,
+    HR_SPEC_PATH,
+    LEGAL_SPEC_PATH,
+    MEDICAL_SPEC_PATH,
+)
 from brix.spec.loader import load_spec, load_spec_from_dict
 from brix.spec.models import SpecModel
 
@@ -26,7 +32,11 @@ __all__ = [
     "BrixRouter",
     "CircuitBreakerError",
     "ClassifierError",
+    "FINANCE_SPEC_PATH",
+    "HR_SPEC_PATH",
+    "LEGAL_SPEC_PATH",
     "LLMClient",
+    "MEDICAL_SPEC_PATH",
     "MockLLMClient",
     "RegistryError",
     "SamplerError",

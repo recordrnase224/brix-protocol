@@ -13,10 +13,40 @@ def get_default_spec_path() -> Path:
     package, ensuring it works after pip install (not just from source).
     """
     ref = importlib.resources.files("brix.specs.general") / "v1.0.0.yaml"
-    # as_posix works for traversable; for installed packages we need the real path
     with importlib.resources.as_file(ref) as path:
-        # Return a concrete Path — the context manager ensures the file exists
+        return Path(path)
+
+
+def get_medical_spec_path() -> Path:
+    """Return the filesystem path to the built-in medical v1.0.0 spec."""
+    ref = importlib.resources.files("brix.specs.medical") / "v1.0.0.yaml"
+    with importlib.resources.as_file(ref) as path:
+        return Path(path)
+
+
+def get_legal_spec_path() -> Path:
+    """Return the filesystem path to the built-in legal v1.0.0 spec."""
+    ref = importlib.resources.files("brix.specs.legal") / "v1.0.0.yaml"
+    with importlib.resources.as_file(ref) as path:
+        return Path(path)
+
+
+def get_finance_spec_path() -> Path:
+    """Return the filesystem path to the built-in finance v1.0.0 spec."""
+    ref = importlib.resources.files("brix.specs.finance") / "v1.0.0.yaml"
+    with importlib.resources.as_file(ref) as path:
+        return Path(path)
+
+
+def get_hr_spec_path() -> Path:
+    """Return the filesystem path to the built-in HR v1.0.0 spec."""
+    ref = importlib.resources.files("brix.specs.hr") / "v1.0.0.yaml"
+    with importlib.resources.as_file(ref) as path:
         return Path(path)
 
 
 DEFAULT_SPEC_VERSION: str = "general/v1.0.0"
+MEDICAL_SPEC_PATH: str = "medical/v1.0.0"
+LEGAL_SPEC_PATH: str = "legal/v1.0.0"
+FINANCE_SPEC_PATH: str = "finance/v1.0.0"
+HR_SPEC_PATH: str = "hr/v1.0.0"

@@ -1,0 +1,231 @@
+metadata:
+  name: legal
+  version: "1.0.0"
+  domain: legal
+  description: >
+    BRIX specification for legal research platforms and compliance tools.
+    Enforces circuit breakers on jurisdictional requirements, statutes of
+    limitation, procedural deadlines, legal advice, and criminal liability.
+    This is not legal advice. Consult a qualified attorney for advice
+    specific to your situation.
+  model_compatibility:
+    - model_family: gpt-4
+      status: community
+      notes: "Community-tested with GPT-4 for legal research queries"
+    - model_family: claude-3
+      status: community
+      notes: "Community-tested with Claude 3 for legal analysis"
+
+circuit_breakers:
+  - name: jurisdictional_requirements
+    description: >
+      Fires on queries about jurisdiction-specific legal mandates where
+      incorrect information could lead to non-compliance.
+    patterns:
+      - "jurisdiction requires"
+      - "mandatory in"
+      - "legally required in"
+      - "statutory requirement"
+    exclude_context:
+      - "comparative law"
+      - "academic survey"
+      - "historical analysis"
+      - "law school"
+
+  - name: statute_of_limitations
+    description: >
+      Fires on queries about limitation periods where missed deadlines
+      can permanently extinguish legal rights.
+    patterns:
+      - "statute of limitations"
+      - "filing deadline"
+      - "time-barred"
+      - "limitation period"
+    exclude_context:
+      - "legal history"
+      - "policy discussion"
+      - "reform proposal"
+      - "general concept"
+
+  - name: procedural_deadlines
+    description: >
+      Fires on queries about court-imposed deadlines where late filing
+      results in default judgment or waiver of rights.
+    patterns:
+      - "must file by"
+      - "deadline to respond"
+      - "court deadline"
+      - "response due"
+    exclude_context:
+      - "hypothetical scenario"
+      - "moot court"
+      - "practice exercise"
+      - "exam question"
+
+  - name: legal_advice
+    description: >
+      Fires on queries where the model might provide specific legal
+      recommendations that constitute unauthorized practice of law.
+    patterns:
+      - "you should sue"
+      - "my legal advice is"
+      - "I advise you to"
+      - "legal recommendation"
+    exclude_context:
+      - "legal writing example"
+      - "template language"
+      - "sample letter"
+      - "educational example"
+
+  - name: criminal_liability
+    description: >
+      Fires on queries about criminal exposure where incorrect
+      information could lead to self-incrimination or failed defense.
+    patterns:
+      - "criminal liability"
+      - "felony charge"
+      - "criminal offense"
+      - "prosecution risk"
+    exclude_context:
+      - "criminal law textbook"
+      - "law school course"
+      - "academic research"
+      - "policy analysis"
+
+risk_signals:
+  - name: case_citations
+    description: "Queries referencing specific cases or litigation parties"
+    patterns:
+      - "plaintiff"
+      - "defendant"
+      - "docket number"
+      - "case number"
+    weight: 0.7
+    category: registered
+    exclude_context:
+      - "fictional case"
+      - "example scenario"
+
+  - name: regulatory_references
+    description: "Queries citing specific regulatory codes or statutes"
+    patterns:
+      - "CFR"
+      - "USC"
+      - "code section"
+      - "subsection"
+    weight: 0.8
+    category: registered
+    exclude_context:
+      - "general overview"
+      - "how laws are organized"
+
+  - name: jurisdiction_specific
+    description: "Queries about jurisdiction-specific legal rules"
+    patterns:
+      - "under California law"
+      - "federal law requires"
+      - "state law"
+      - "EU regulation"
+    weight: 0.7
+    category: registered
+    exclude_context:
+      - "comparative study"
+      - "general differences"
+
+  - name: contract_terms
+    description: "Queries about specific contractual obligations or provisions"
+    patterns:
+      - "breach of contract"
+      - "contractual obligation"
+      - "indemnification"
+      - "liability clause"
+    weight: 0.6
+    category: registered
+    exclude_context:
+      - "contract law basics"
+      - "general definition"
+
+  - name: compliance_obligations
+    description: "Queries about mandatory compliance requirements"
+    patterns:
+      - "must comply"
+      - "required by law"
+      - "regulatory compliance"
+      - "audit requirement"
+    weight: 0.8
+    category: registered
+    exclude_context:
+      - "compliance overview"
+      - "what is compliance"
+
+  - name: legal_deadlines
+    description: "Queries about specific filing or response deadlines"
+    patterns:
+      - "response required by"
+      - "due date"
+      - "expiration"
+    weight: 0.9
+    category: registered
+    exclude_context:
+      - "general process"
+      - "how courts work"
+
+  - name: damages_claims
+    description: "Queries about damages, compensation, or settlement amounts"
+    patterns:
+      - "damages"
+      - "compensation"
+      - "settlement"
+      - "punitive"
+    weight: 0.7
+    category: universal
+    exclude_context:
+      - "legal theory"
+      - "types of damages"
+      - "general definition"
+
+uncertainty_types:
+  - name: epistemic
+    description: >
+      The model lacks verified legal knowledge for this query. Forces
+      retrieval from authoritative legal sources.
+    action_config:
+      action: force_retrieval
+      force_retrieval: true
+      message_template: >
+        This query requires verified legal information. Let me retrieve
+        authoritative legal sources to provide an accurate response.
+        This is not legal advice. Consult a qualified attorney for
+        advice specific to your situation.
+
+  - name: contradictory
+    description: >
+      Conflicting legal interpretations detected, possibly reflecting
+      a circuit split or jurisdictional differences.
+    action_config:
+      action: conflict_resolution
+      message_template: >
+        Conflicting legal interpretations have been identified. This may
+        reflect differences between jurisdictions or a circuit split.
+        This is not legal advice. Consult a qualified attorney for
+        advice specific to your situation.
+
+  - name: open_ended
+    description: >
+      Legal question with multiple valid interpretations or approaches.
+    action_config:
+      action: distribution_response
+      message_template: >
+        This legal question has multiple valid interpretations. Here are
+        the main positions and the conditions under which each applies.
+        This is not legal advice. Consult a qualified attorney for
+        advice specific to your situation.
+
+sampling_config:
+  low_threshold: 0.35
+  medium_threshold: 0.60
+  low_samples: 1
+  medium_samples: 2
+  high_samples: 3
+  circuit_breaker_samples: 3
+  temperature: 0.7
