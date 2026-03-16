@@ -48,4 +48,4 @@ __all__ = [
     "load_spec_from_dict",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
