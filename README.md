@@ -297,13 +297,13 @@ Lower-stakes circuit breakers on HR policies, legal obligations. High utility pr
 
 BRIX ships with five ready-to-use domain specifications:
 
-| Spec | Domain | Circuit Breakers | Risk Signals | Balance Index |
-| --- | --- | --- | --- | --- |
-| `general/v1.0.0` | General purpose | 3 | 7 | 0.873 |
-| `medical/v1.0.0` | Medical / FDA-aligned | 6 | 8 | 0.884 |
-| `legal/v1.0.0` | Legal research | 5 | 7 | 0.895 |
-| `finance/v1.0.0` | Financial services | 5 | 8 | 0.894 |
-| `hr/v1.0.0` | Human resources | 4 | 6 | 0.889 |
+| Spec             | Domain                | Circuit Breakers | Risk Signals | Balance Index |
+| ---------------- | --------------------- | ---------------- | ------------ | ------------- |
+| `general/v1.0.0` | General purpose       | 3                | 7            | 0.873         |
+| `medical/v1.0.0` | Medical / FDA-aligned | 6                | 8            | 0.884         |
+| `legal/v1.0.0`   | Legal research        | 5                | 7            | 0.895         |
+| `finance/v1.0.0` | Financial services    | 5                | 8            | 0.894         |
+| `hr/v1.0.0`      | Human resources       | 4                | 6            | 0.889         |
 
 Load any spec by path:
 
