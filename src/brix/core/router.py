@@ -7,13 +7,15 @@ action execution, and structured result assembly.
 
 from __future__ import annotations
 
-import json
+import dataclasses
+import sys
 import time
 from pathlib import Path
 from typing import Literal
 from uuid import UUID, uuid4
 
 from brix.actions.executor import ActionExecutor
+from brix.console.output import print_result
 from brix.analysis.classifier import UncertaintyClassifier
 from brix.analysis.consistency import SemanticConsistencyAnalyzer
 from brix.balance.tracker import BalanceTracker
@@ -21,6 +23,9 @@ from brix.core.result import ActionTaken, StructuredResult, UncertaintyType
 from brix.engine.evaluator import TwoTrackEvaluator
 from brix.engine.signal_index import SignalIndex
 from brix.llm.protocol import LLMClient
+from brix.output.guard import OutputGuard
+from brix.output.result import OutputResult
+from brix.retrieval.protocol import RetrievalProvider
 from brix.sampling.sampler import AdaptiveSampler
 from brix.spec.defaults import get_default_spec_path
 from brix.spec.loader import load_spec
@@ -42,6 +47,9 @@ class BrixRouter:
         *,
         embedding_model: str = "all-MiniLM-L6-v2",
         log_path: Path | None = None,
+        system_prompt: str | None = None,
+        enable_output_guard: bool = False,
+        retrieval_provider: RetrievalProvider | None = None,
         _analyzer: SemanticConsistencyAnalyzer | None = None,
     ) -> None:
         """Initialize the BRIX router.
@@ -51,6 +59,9 @@ class BrixRouter:
             spec: A SpecModel, path to YAML file, or None for built-in default.
             embedding_model: Sentence-transformers model name (loaded once).
             log_path: Optional path for JSONL structured result logging.
+            system_prompt: Optional system prompt passed to all LLM sample calls.
+            enable_output_guard: Enable response-side output scanning.
+            retrieval_provider: Optional RAG provider for real retrieval execution.
             _analyzer: Internal override for testing (skip model loading).
         """
         # Load specification
@@ -63,6 +74,7 @@ class BrixRouter:
 
         self._llm = llm_client
         self._log_path = log_path
+        self._system_prompt = system_prompt
 
         # Build components
         self._signal_index = SignalIndex(self._spec)
@@ -76,8 +88,19 @@ class BrixRouter:
             self._analyzer = SemanticConsistencyAnalyzer(embedding_model)
 
         self._classifier = UncertaintyClassifier(self._analyzer)
-        self._executor = ActionExecutor(self._spec, self._llm)
-        self._balance = BalanceTracker()
+        self._executor = ActionExecutor(
+            self._spec, self._llm, retrieval_provider=retrieval_provider
+        )
+        self._balance = BalanceTracker(
+            risk_threshold=self._spec.sampling_config.low_threshold,
+        )
+
+        # Output guard
+        self._output_guard: OutputGuard | None = None
+        if enable_output_guard:
+            self._output_guard = OutputGuard(
+                self._spec, _analyzer=self._analyzer
+            )
 
         # Resolve model compatibility status
         self._registry_version = f"{self._spec.metadata.name}/{self._spec.metadata.version}"
@@ -95,11 +118,19 @@ class BrixRouter:
         Args:
             query: The user query text.
             context: Optional context for exclude_context filtering.
-            retrieval_score: Optional RAG retrieval quality score (0.0–1.0).
+            retrieval_score: Optional RAG retrieval quality score (0.0-1.0).
 
         Returns:
             A complete StructuredResult with all fields populated.
+
+        Raises:
+            ValueError: If retrieval_score is not None and outside [0.0, 1.0].
         """
+        if retrieval_score is not None and not (0.0 <= retrieval_score <= 1.0):
+            raise ValueError(
+                f"retrieval_score must be between 0.0 and 1.0, got {retrieval_score}"
+            )
+
         t0 = time.perf_counter()
         decision_id = uuid4()
 
@@ -111,6 +142,7 @@ class BrixRouter:
             query=query,
             risk_score=eval_result.risk_score,
             circuit_breaker_hit=eval_result.circuit_breaker_hit,
+            system=self._system_prompt,
         )
 
         # Step 3: Uncertainty classification
@@ -129,7 +161,21 @@ class BrixRouter:
             force_retrieval=sampler_result.force_retrieval,
         )
 
-        # Step 5: Balance Index update
+        # Step 5: Output guard (if enabled)
+        output_result: OutputResult | None = None
+        if self._output_guard is not None:
+            output_result = await self._output_guard.analyze(
+                action_result.response, query=query, context=context
+            )
+            # If output blocked and no input-side intervention, escalate
+            if output_result.output_blocked and not action_result.intervention_necessary:
+                action_result = dataclasses.replace(
+                    action_result,
+                    response_requires_verification=True,
+                    intervention_necessary=True,
+                )
+
+        # Step 6: Balance Index update
         reliability_signal, utility_signal, balance_index = self._balance.record_decision(
             decision_id=decision_id,
             intervention_necessary=action_result.intervention_necessary,
@@ -157,11 +203,24 @@ class BrixRouter:
             model_compatibility_status=self._compat_status,
             cost_tokens_extra=action_result.cost_tokens_extra,
             latency_ms=latency_ms,
+            response_requires_verification=action_result.response_requires_verification,
+            unverified_draft=action_result.unverified_draft,
+            sampler_partial_failure=sampler_result.partial_failure,
+            retrieval_executed=action_result.retrieval_executed,
+            retrieval_failed=action_result.retrieval_failed,
+            retrieval_sources=action_result.retrieval_sources,
+            output_result=output_result,
         )
 
         # Optional JSONL logging
         if self._log_path is not None:
             self._write_log(result)
+
+        # Console feedback (never propagates errors)
+        try:
+            print_result(result, output_result=output_result)
+        except Exception:
+            pass
 
         return result
 
@@ -206,6 +265,9 @@ class BrixRouter:
         """Append a StructuredResult as a JSONL line to the log file."""
         if self._log_path is None:
             return
-        line = result.model_dump_json() + "\n"
-        with open(self._log_path, "a", encoding="utf-8") as f:
-            f.write(line)
+        try:
+            line = result.model_dump_json() + "\n"
+            with open(self._log_path, "a", encoding="utf-8") as f:
+                f.write(line)
+        except OSError as exc:
+            print(f"Warning: failed to write BRIX log: {exc}", file=sys.stderr)

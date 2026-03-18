@@ -17,6 +17,8 @@ from brix.core.result import ActionTaken, StructuredResult, UncertaintyType
 from brix.core.router import BrixRouter
 from brix.llm.mock import MockLLMClient
 from brix.llm.protocol import LLMClient
+from brix.output import OutputGuard, OutputResult
+from brix.retrieval import RetrievalProvider, RetrievalResult
 from brix.spec.defaults import (
     FINANCE_SPEC_PATH,
     HR_SPEC_PATH,
@@ -38,7 +40,11 @@ __all__ = [
     "LLMClient",
     "MEDICAL_SPEC_PATH",
     "MockLLMClient",
+    "OutputGuard",
+    "OutputResult",
     "RegistryError",
+    "RetrievalProvider",
+    "RetrievalResult",
     "SamplerError",
     "SpecModel",
     "SpecValidationError",
@@ -48,4 +54,4 @@ __all__ = [
     "load_spec_from_dict",
 ]
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"

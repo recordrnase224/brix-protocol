@@ -21,6 +21,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+from brix.output.result import OutputResult
+
 
 class UncertaintyType(StrEnum):
     """Classified uncertainty category for a processed query."""
@@ -60,3 +62,10 @@ class StructuredResult(BaseModel):
     model_compatibility_status: Literal["verified", "community", "untested", "unknown"] = "unknown"
     cost_tokens_extra: int = Field(ge=0, default=0)
     latency_ms: float = Field(ge=0.0)
+    response_requires_verification: bool = Field(default=False)
+    unverified_draft: str | None = Field(default=None)
+    sampler_partial_failure: bool = Field(default=False)
+    retrieval_executed: bool = Field(default=False)
+    retrieval_failed: bool = Field(default=False)
+    retrieval_sources: list[str] = Field(default_factory=list)
+    output_result: OutputResult | None = Field(default=None)

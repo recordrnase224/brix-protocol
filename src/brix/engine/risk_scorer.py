@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from brix.engine.signal_index import SignalIndex
+from brix.engine.signal_index import SignalIndex, _normalize
 from brix.spec.models import SpecModel
 
 
@@ -45,7 +45,7 @@ class RiskScoreTrack:
         for signal in spec.risk_signals:
             self._weight_map[signal.name] = signal.weight
             self._category_map[signal.name] = signal.category
-            self._exclude_map[signal.name] = [p.lower() for p in signal.exclude_context]
+            self._exclude_map[signal.name] = [_normalize(p).lower() for p in signal.exclude_context]
 
     def evaluate(
         self,
@@ -67,9 +67,7 @@ class RiskScoreTrack:
         risk_matches = [m for m in matches if m.signal_type == "risk_signal"]
 
         # Apply exclude_context post-match filtering
-        query_lower = query.lower()
-        context_lower = context.lower() if context else ""
-        combined_text = f"{query_lower} {context_lower}"
+        combined_text = _normalize(f"{query} {context or ''}").lower()
 
         surviving_names: set[str] = set()
         for match in risk_matches:

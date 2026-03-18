@@ -9,10 +9,12 @@ Each uncertainty type produces a meaningfully different response:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 
 from brix.core.result import ActionTaken, UncertaintyType
 from brix.llm.protocol import LLMClient
+from brix.retrieval.protocol import RetrievalProvider
 from brix.spec.models import SpecModel, UncertaintyTypeDef
 
 
@@ -24,6 +26,11 @@ class ActionResult:
     response: str
     intervention_necessary: bool
     cost_tokens_extra: int
+    response_requires_verification: bool = False
+    unverified_draft: str | None = None
+    retrieval_executed: bool = False
+    retrieval_failed: bool = False
+    retrieval_sources: list[str] = field(default_factory=list)
 
 
 class ActionExecutor:
@@ -33,8 +40,14 @@ class ActionExecutor:
     different label on the same output.
     """
 
-    def __init__(self, spec: SpecModel, llm_client: LLMClient) -> None:
+    def __init__(
+        self,
+        spec: SpecModel,
+        llm_client: LLMClient,
+        retrieval_provider: RetrievalProvider | None = None,
+    ) -> None:
         self._llm = llm_client
+        self._retrieval_provider = retrieval_provider
         self._type_configs: dict[str, UncertaintyTypeDef] = {
             t.name: t for t in spec.uncertainty_types
         }
@@ -57,7 +70,12 @@ class ActionExecutor:
         Returns:
             ActionResult with the final response and action metadata.
         """
-        if uncertainty_type == UncertaintyType.CERTAIN and not force_retrieval:
+        # Combine force_retrieval from sampler with spec action_config
+        type_config = self._type_configs.get(uncertainty_type.value)
+        config_force = type_config.action_config.force_retrieval if type_config else False
+        effective_force = force_retrieval or config_force
+
+        if uncertainty_type == UncertaintyType.CERTAIN and not effective_force:
             return ActionResult(
                 action_taken=ActionTaken.NONE,
                 response=samples[0] if samples else "",
@@ -65,7 +83,7 @@ class ActionExecutor:
                 cost_tokens_extra=0,
             )
 
-        if uncertainty_type == UncertaintyType.EPISTEMIC or force_retrieval:
+        if uncertainty_type == UncertaintyType.EPISTEMIC or effective_force:
             return await self._handle_epistemic(samples, query)
 
         if uncertainty_type == UncertaintyType.CONTRADICTORY:
@@ -84,21 +102,43 @@ class ActionExecutor:
         config = self._type_configs.get("epistemic")
         template = config.action_config.message_template if config else ""
 
-        # Build a retrieval-signaling response from the samples
-        sample_summary = samples[0] if samples else "No response available."
-        response = (
-            f"{template.strip()}\n\n"
-            f"Based on initial analysis: {sample_summary}\n\n"
-            f"[RETRIEVAL_NEEDED] This response requires verification through "
-            f"retrieval augmentation. The query '{query}' touches on knowledge "
-            f"that may not be reliably represented in the model's training data."
-        )
+        # If a retrieval provider is configured, execute real retrieval
+        if self._retrieval_provider is not None:
+            try:
+                retrieval_result = await self._retrieval_provider.retrieve(query)
+                response = f"{template.strip()}\n\n{retrieval_result.content}"
+                return ActionResult(
+                    action_taken=ActionTaken.FORCE_RETRIEVAL,
+                    response=response,
+                    intervention_necessary=True,
+                    cost_tokens_extra=self._estimate_extra_tokens(samples),
+                    response_requires_verification=False,
+                    retrieval_executed=True,
+                    retrieval_sources=list(retrieval_result.sources),
+                )
+            except Exception as exc:
+                print(
+                    f"Warning: retrieval provider failed: {exc}",
+                    file=sys.stderr,
+                )
+                return ActionResult(
+                    action_taken=ActionTaken.FORCE_RETRIEVAL,
+                    response=template.strip(),
+                    intervention_necessary=True,
+                    cost_tokens_extra=self._estimate_extra_tokens(samples),
+                    response_requires_verification=True,
+                    unverified_draft=samples[0] if samples else None,
+                    retrieval_failed=True,
+                )
 
+        # No retrieval provider — return template only, mark for verification
         return ActionResult(
             action_taken=ActionTaken.FORCE_RETRIEVAL,
-            response=response,
+            response=template.strip(),
             intervention_necessary=True,
             cost_tokens_extra=self._estimate_extra_tokens(samples),
+            response_requires_verification=True,
+            unverified_draft=samples[0] if samples else None,
         )
 
     async def _handle_contradictory(

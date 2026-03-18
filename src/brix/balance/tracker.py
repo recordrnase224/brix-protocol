@@ -9,6 +9,8 @@ Supports both heuristic defaults and explicit feedback from the caller.
 
 from __future__ import annotations
 
+import sys
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from uuid import UUID
 
@@ -31,9 +33,13 @@ class BalanceTracker:
     the feedback() method.
     """
 
-    def __init__(self) -> None:
+    MAX_PENDING: int = 10_000
+
+    def __init__(self, risk_threshold: float = 0.40) -> None:
         self._state = BalanceState()
-        self._pending: dict[UUID, _PendingDecision] = {}
+        self._risk_threshold = risk_threshold
+        self._pending: OrderedDict[UUID, _PendingDecision] = OrderedDict()
+        self._evicted_ids: set[UUID] = set()
 
     @property
     def state(self) -> BalanceState:
@@ -68,7 +74,7 @@ class BalanceTracker:
         Returns:
             Tuple of (reliability_signal, utility_signal, balance_index).
         """
-        is_risky = circuit_breaker_hit or risk_score > 0.40
+        is_risky = circuit_breaker_hit or risk_score > self._risk_threshold
 
         if is_risky and intervention_necessary:
             self._state.tp += 1
@@ -93,6 +99,11 @@ class BalanceTracker:
             intervention_applied=intervention_necessary,
         )
 
+        # Evict oldest if capacity exceeded
+        if len(self._pending) > self.MAX_PENDING:
+            evicted_id, _ = self._pending.popitem(last=False)
+            self._evicted_ids.add(evicted_id)
+
         balance = self.compute_balance_index()
         return reliability_signal, utility_signal, balance
 
@@ -103,6 +114,15 @@ class BalanceTracker:
             decision_id: The decision to correct.
             was_intervention_necessary: True if intervention was actually needed.
         """
+        if decision_id in self._evicted_ids:
+            print(
+                f"Warning: decision {decision_id} was evicted from pending buffer "
+                f"and cannot be corrected via feedback",
+                file=sys.stderr,
+            )
+            self._evicted_ids.discard(decision_id)
+            return
+
         pending = self._pending.pop(decision_id, None)
         if pending is None:
             return

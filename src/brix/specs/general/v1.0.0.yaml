@@ -1,6 +1,6 @@
 metadata:
   name: general
-  version: "1.0.0"
+  version: '1.0.0'
   domain: general
   description: >
     General-purpose BRIX specification covering common high-risk patterns
@@ -9,13 +9,13 @@ metadata:
   model_compatibility:
     - model_family: gpt-4
       status: community
-      notes: "Community-tested with GPT-4 and GPT-4 Turbo"
+      notes: 'Community-tested with GPT-4 and GPT-4 Turbo'
     - model_family: gpt-3.5-turbo
       status: community
-      notes: "Community-tested, higher false-negative rate on nuanced queries"
+      notes: 'Community-tested, higher false-negative rate on nuanced queries'
     - model_family: claude-3
       status: community
-      notes: "Community-tested with Claude 3 Opus and Sonnet"
+      notes: 'Community-tested with Claude 3 Opus and Sonnet'
 
 circuit_breakers:
   - name: medical_dosing
@@ -24,23 +24,23 @@ circuit_breakers:
       information, or dosing calculations. Medical dosing errors can cause
       direct patient harm and must always trigger retrieval verification.
     patterns:
-      - "lethal dose"
-      - "fatal dose"
-      - "maximum dose"
-      - "dosage for"
-      - "how much to take"
-      - "mg per kg"
-      - "milligrams per kilogram"
-      - "overdose amount"
-      - "drug interaction"
-      - "contraindication"
-      - "adverse reaction"
-      - "side effect of"
+      - 'lethal dose'
+      - 'fatal dose'
+      - 'maximum dose'
+      - 'dosage for'
+      - 'how much to take'
+      - 'mg per kg'
+      - 'milligrams per kilogram'
+      - 'overdose amount'
+      - 'drug interaction'
+      - 'contraindication'
+      - 'adverse reaction'
+      - 'side effect of'
     exclude_context:
-      - "pharmacology textbook"
-      - "educational context"
-      - "training material"
-      - "exam question"
+      - 'pharmacology textbook'
+      - 'educational context'
+      - 'training material'
+      - 'exam question'
 
   - name: legal_obligations
     description: >
@@ -48,22 +48,22 @@ circuit_breakers:
       mandates, or regulatory obligations where incorrect information
       could lead to non-compliance or legal liability.
     patterns:
-      - "statute of limitations"
-      - "legal requirement"
-      - "legally required"
-      - "mandatory reporting"
-      - "regulatory requirement"
-      - "compliance obligation"
-      - "jurisdictional"
-      - "court order"
-      - "legally binding"
-      - "penalty for"
-      - "fine for violating"
+      - 'statute of limitations'
+      - 'legal requirement'
+      - 'legally required'
+      - 'mandatory reporting'
+      - 'regulatory requirement'
+      - 'compliance obligation'
+      - 'jurisdictional'
+      - 'court order'
+      - 'legally binding'
+      - 'penalty for'
+      - 'fine for violating'
     exclude_context:
-      - "legal history"
-      - "academic discussion"
-      - "general overview"
-      - "hypothetical scenario"
+      - 'legal history'
+      - 'academic discussion'
+      - 'general overview'
+      - 'hypothetical scenario'
 
   - name: financial_advice
     description: >
@@ -72,129 +72,129 @@ circuit_breakers:
       guidance where incorrect information could cause direct
       financial harm.
     patterns:
-      - "should i invest"
-      - "investment advice"
-      - "tax deduction for"
-      - "tax liability"
-      - "fiduciary duty"
-      - "financial obligation"
-      - "retirement calculation"
-      - "interest rate for"
-      - "loan qualification"
-      - "credit score impact"
+      - 'should i invest'
+      - 'investment advice'
+      - 'tax deduction for'
+      - 'tax liability'
+      - 'fiduciary duty'
+      - 'financial obligation'
+      - 'retirement calculation'
+      - 'interest rate for'
+      - 'loan qualification'
+      - 'credit score impact'
     exclude_context:
-      - "financial literacy"
-      - "educational material"
-      - "textbook example"
-      - "general concept"
+      - 'financial literacy'
+      - 'educational material'
+      - 'textbook example'
+      - 'general concept'
 
 risk_signals:
   - name: specific_numbers
-    description: "Queries requesting precise numerical values that may require verification"
+    description: 'Queries requesting precise numerical values that may require verification'
     patterns:
-      - "the number is"
-      - "costs $"
-      - "priced at"
-      - "percentage of"
+      - 'the number is'
+      - 'costs $'
+      - 'priced at'
+      - 'percentage of'
     weight: 0.3
     category: universal
     exclude_context:
-      - "approximate"
-      - "roughly"
-      - "about"
-      - "estimate"
-      - "around"
+      - 'approximate'
+      - 'roughly'
+      - 'about'
+      - 'estimate'
+      - 'around'
 
   - name: specific_dates
-    description: "Queries referencing specific deadlines or expiration dates"
+    description: 'Queries referencing specific deadlines or expiration dates'
     patterns:
-      - "deadline is"
-      - "due date"
-      - "expires on"
-      - "effective date"
+      - 'deadline is'
+      - 'due date'
+      - 'expires on'
+      - 'effective date'
     weight: 0.25
     category: universal
     exclude_context:
-      - "historical"
-      - "in the past"
-      - "general timeline"
-      - "no specific date"
-      - "just curious"
+      - 'historical'
+      - 'in the past'
+      - 'general timeline'
+      - 'no specific date'
+      - 'just curious'
 
   - name: proper_names
-    description: "Queries about specific people or organizations requiring attribution accuracy"
+    description: 'Queries about specific people or organizations requiring attribution accuracy'
     patterns:
-      - "founded by"
-      - "CEO of"
-      - "president of"
-      - "director of"
+      - 'founded by'
+      - 'CEO of'
+      - 'president of'
+      - 'director of'
     weight: 0.2
     category: universal
     exclude_context:
-      - "general knowledge"
-      - "well known"
-      - "common knowledge"
-      - "famous"
+      - 'general knowledge'
+      - 'well known'
+      - 'common knowledge'
+      - 'famous'
 
   - name: uncertainty_language
-    description: "Queries where the user explicitly signals they need reliable confirmation"
+    description: 'Queries where the user explicitly signals they need reliable confirmation'
     patterns:
-      - "is it true that"
-      - "can you confirm"
-      - "is it safe to"
-      - "is it legal to"
-      - "fact check"
+      - 'is it true that'
+      - 'can you confirm'
+      - 'is it safe to'
+      - 'is it legal to'
+      - 'fact check'
     weight: 0.6
     category: registered
     exclude_context:
-      - "just wondering"
-      - "hypothetically"
-      - "casual question"
+      - 'just wondering'
+      - 'hypothetically'
+      - 'casual question'
 
   - name: factual_claims
-    description: "Queries making or requesting verification of specific factual claims"
+    description: 'Queries making or requesting verification of specific factual claims'
     patterns:
-      - "the fact is"
-      - "it is known that"
-      - "studies show"
-      - "research proves"
-      - "scientifically proven"
+      - 'the fact is'
+      - 'it is known that'
+      - 'studies show'
+      - 'research proves'
+      - 'scientifically proven'
     weight: 0.7
     category: registered
     exclude_context:
-      - "opinion"
-      - "some people believe"
-      - "debated topic"
-      - "controversial"
+      - 'opinion'
+      - 'some people believe'
+      - 'debated topic'
+      - 'controversial'
 
   - name: time_sensitive
-    description: "Queries about information with explicit time-dependence or expiration"
+    description: 'Queries about information with explicit time-dependence or expiration'
     patterns:
-      - "current price"
-      - "latest version"
-      - "current status"
-      - "real-time"
+      - 'current price'
+      - 'latest version'
+      - 'current status'
+      - 'real-time'
     weight: 0.3
     category: registered
     exclude_context:
-      - "general question"
-      - "conceptual"
-      - "how does it work"
+      - 'general question'
+      - 'conceptual'
+      - 'how does it work'
 
   - name: instruction_following
-    description: "Queries that attempt to override model safety constraints"
+    description: 'Queries that attempt to override model safety constraints'
     patterns:
-      - "ignore previous"
-      - "disregard instructions"
-      - "pretend you are"
-      - "jailbreak"
-      - "do not refuse"
+      - 'ignore previous'
+      - 'disregard instructions'
+      - 'pretend you are'
+      - 'jailbreak'
+      - 'do not refuse'
     weight: 0.9
     category: registered
     exclude_context:
-      - "security research"
-      - "red team"
-      - "testing prompt"
+      - 'security research'
+      - 'red team'
+      - 'testing prompt'
 
 uncertainty_types:
   - name: epistemic

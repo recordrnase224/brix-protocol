@@ -58,6 +58,14 @@ def test_cmd(
         console.print("[yellow]No test cases found in suite[/yellow]")
         raise typer.Exit(code=1)
 
+    # Note about model parameter
+    if model != "mock":
+        console.print(
+            f"[yellow]Note:[/yellow] brix test always uses MockLLMClient for deterministic results. "
+            f"The --model '{model}' value is recorded in the report but does not affect test execution. "
+            f"Declare model compatibility in spec metadata.model_compatibility instead."
+        )
+
     # Create router with mock client
     mock_client = MockLLMClient(default_response="Mock response for testing.")
     router = BrixRouter(llm_client=mock_client, spec=spec, _analyzer=_create_mock_analyzer())
@@ -105,6 +113,7 @@ def test_cmd(
     report = {
         "spec": f"{spec.metadata.name}/{spec.metadata.version}",
         "model": model,
+        "target_model": model,
         "total": len(results),
         "passed": passed,
         "failed": failed,

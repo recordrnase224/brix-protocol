@@ -46,9 +46,21 @@ def lint_cmd(
         errors.append(conflict)
         console.print(f"[red]ERROR[/red] {conflict}")
 
+    # Step 2b: Detect conflicting output signals
+    output_conflicts = _detect_output_conflicts(spec)
+    for conflict in output_conflicts:
+        errors.append(conflict)
+        console.print(f"[red]ERROR[/red] {conflict}")
+
     # Step 3: Detect unreachable rules
     unreachable = _detect_unreachable(spec)
     for rule in unreachable:
+        warnings.append(rule)
+        console.print(f"[yellow]WARN[/yellow] {rule}")
+
+    # Step 3b: Detect unreachable output signals
+    output_unreachable = _detect_output_unreachable(spec)
+    for rule in output_unreachable:
         warnings.append(rule)
         console.print(f"[yellow]WARN[/yellow] {rule}")
 
@@ -65,6 +77,10 @@ def lint_cmd(
     # Step 5: Estimate Balance Index
     estimated_balance = _estimate_balance_index(spec, utility_impact)
 
+    # Count output signal types
+    output_total = len(spec.output_signals)
+    output_block = sum(1 for s in spec.output_signals if s.signal_type == "block")
+
     # Summary table
     console.print()
     table = Table(title="Lint Summary")
@@ -74,6 +90,8 @@ def lint_cmd(
     table.add_row("Domain", spec.metadata.domain)
     table.add_row("Circuit Breakers", str(len(spec.circuit_breakers)))
     table.add_row("Risk Signals", str(len(spec.risk_signals)))
+    table.add_row("Output Signals", str(output_total))
+    table.add_row("Output Block Signals", str(output_block))
     table.add_row("Total Patterns", str(_count_patterns(spec)))
     table.add_row("Estimated Utility Impact", f"{utility_impact:.1%}")
     table.add_row("Estimated Balance Index", f"{estimated_balance:.3f}")
@@ -115,6 +133,27 @@ def _detect_conflicts(spec: SpecModel) -> list[str]:
     return conflicts
 
 
+def _detect_output_conflicts(spec: SpecModel) -> list[str]:
+    """Detect conflicting patterns between output signals and CB/risk signals."""
+    conflicts: list[str] = []
+    cb_patterns: dict[str, str] = {}
+
+    for cb in spec.circuit_breakers:
+        for pattern in cb.patterns:
+            cb_patterns[pattern.lower()] = cb.name
+
+    for signal in spec.output_signals:
+        for pattern in signal.patterns:
+            key = pattern.lower()
+            if key in cb_patterns:
+                conflicts.append(
+                    f"Output signal pattern '{pattern}' conflicts with circuit breaker "
+                    f"'{cb_patterns[key]}'"
+                )
+
+    return conflicts
+
+
 def _detect_unreachable(spec: SpecModel) -> list[str]:
     """Detect rules where exclude_context would eliminate all possible matches."""
     unreachable: list[str] = []
@@ -147,6 +186,28 @@ def _detect_unreachable(spec: SpecModel) -> list[str]:
         if all_excluded:
             unreachable.append(
                 f"Risk signal '{signal.name}' may be unreachable: all patterns "
+                f"are substrings of exclude_context entries"
+            )
+
+    return unreachable
+
+
+def _detect_output_unreachable(spec: SpecModel) -> list[str]:
+    """Detect output signals where exclude_context eliminates all matches."""
+    unreachable: list[str] = []
+
+    for signal in spec.output_signals:
+        if not signal.exclude_context:
+            continue
+        all_excluded = True
+        for pattern in signal.patterns:
+            p_lower = pattern.lower()
+            if not any(p_lower in exc.lower() for exc in signal.exclude_context):
+                all_excluded = False
+                break
+        if all_excluded:
+            unreachable.append(
+                f"Output signal '{signal.name}' may be unreachable: all patterns "
                 f"are substrings of exclude_context entries"
             )
 
@@ -196,7 +257,8 @@ def _estimate_balance_index(spec: SpecModel, utility_impact: float) -> float:
 
 
 def _count_patterns(spec: SpecModel) -> int:
-    """Count total patterns across all circuit breakers and risk signals."""
+    """Count total patterns across all circuit breakers, risk signals, and output signals."""
     count = sum(len(cb.patterns) for cb in spec.circuit_breakers)
     count += sum(len(s.patterns) for s in spec.risk_signals)
+    count += sum(len(s.patterns) for s in spec.output_signals)
     return count

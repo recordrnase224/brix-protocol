@@ -7,10 +7,24 @@ initialization and never reloaded per request.
 
 from __future__ import annotations
 
+import logging
+import os
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+os.environ.setdefault("HF_HUB_DISABLE_IMPLICIT_TOKEN", "1")
+os.environ.setdefault("HF_HUB_VERBOSITY", "error")
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 
 @dataclass(frozen=True, slots=True)

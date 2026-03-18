@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from brix.engine.signal_index import SignalIndex, SignalMatch
+from brix.engine.signal_index import SignalIndex, SignalMatch, _normalize
 from brix.spec.models import SpecModel
 
 
@@ -36,7 +36,7 @@ class CircuitBreakerTrack:
         # Build a lookup of CB name -> exclude_context patterns
         self._exclude_map: dict[str, list[str]] = {}
         for cb in spec.circuit_breakers:
-            self._exclude_map[cb.name] = [p.lower() for p in cb.exclude_context]
+            self._exclude_map[cb.name] = [_normalize(p).lower() for p in cb.exclude_context]
 
     def evaluate(self, query: str, context: str | None = None) -> CircuitBreakerResult:
         """Evaluate a query against all circuit breaker patterns.
@@ -56,9 +56,7 @@ class CircuitBreakerTrack:
 
         # Apply exclude_context: if ANY exclusion term is present in the
         # query text, that CB match is cancelled.
-        query_lower = query.lower()
-        context_lower = context.lower() if context else ""
-        combined_text = f"{query_lower} {context_lower}"
+        combined_text = _normalize(f"{query} {context or ''}").lower()
 
         surviving: list[SignalMatch] = []
         for match in cb_matches:

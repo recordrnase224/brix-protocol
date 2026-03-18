@@ -1,6 +1,6 @@
 metadata:
   name: medical
-  version: "1.0.0"
+  version: '1.0.0'
   domain: medical
   description: >
     FDA-aligned BRIX specification for clinical and patient-facing medical AI
@@ -11,10 +11,10 @@ metadata:
   model_compatibility:
     - model_family: gpt-4
       status: community
-      notes: "Community-tested with GPT-4 for medical information queries"
+      notes: 'Community-tested with GPT-4 for medical information queries'
     - model_family: claude-3
       status: community
-      notes: "Community-tested with Claude 3 Opus and Sonnet"
+      notes: 'Community-tested with Claude 3 Opus and Sonnet'
 
 circuit_breakers:
   - name: drug_dosing
@@ -23,198 +23,198 @@ circuit_breakers:
       and maximum dosing thresholds. Errors in this domain cause direct
       patient harm.
     patterns:
-      - "lethal dose"
-      - "overdose"
-      - "LD50"
-      - "maximum dose"
-      - "toxic dose"
-      - "fatal dose"
+      - 'lethal dose'
+      - 'overdose'
+      - 'LD50'
+      - 'maximum dose'
+      - 'toxic dose'
+      - 'fatal dose'
     exclude_context:
-      - "pharmacology textbook"
-      - "educational context"
-      - "exam question"
-      - "historical case study"
+      - 'pharmacology textbook'
+      - 'educational context'
+      - 'exam question'
+      - 'historical case study'
 
   - name: drug_interactions
     description: >
       Fires on queries about dangerous drug combinations and contraindicated
       co-prescriptions.
     patterns:
-      - "contraindicated"
-      - "dangerous combination"
-      - "fatal interaction"
-      - "do not combine"
-      - "severe interaction"
+      - 'contraindicated'
+      - 'dangerous combination'
+      - 'fatal interaction'
+      - 'do not combine'
+      - 'severe interaction'
     exclude_context:
-      - "pharmacology course"
-      - "training material"
-      - "drug safety review"
-      - "published study"
+      - 'pharmacology course'
+      - 'training material'
+      - 'drug safety review'
+      - 'published study'
 
   - name: self_harm_medical
     description: >
       Fires on queries seeking methods of self-harm or suicide via
       medical means.
     patterns:
-      - "suicide method"
-      - "self-harm instructions"
-      - "how to overdose"
+      - 'suicide method'
+      - 'self-harm instructions'
+      - 'how to overdose'
     exclude_context:
-      - "crisis prevention"
-      - "clinical assessment"
-      - "mental health training"
-      - "suicide prevention protocol"
+      - 'crisis prevention'
+      - 'clinical assessment'
+      - 'mental health training'
+      - 'suicide prevention protocol'
 
   - name: emergency_symptoms
     description: >
       Fires on queries about acute emergency symptoms where delayed or
       incorrect information could be life-threatening.
     patterns:
-      - "signs of stroke"
-      - "heart attack symptoms"
-      - "anaphylaxis"
-      - "sepsis"
-      - "code blue"
+      - 'signs of stroke'
+      - 'heart attack symptoms'
+      - 'anaphylaxis'
+      - 'sepsis'
+      - 'code blue'
     exclude_context:
-      - "first aid training"
-      - "EMT certification"
-      - "clinical education"
-      - "emergency preparedness"
+      - 'first aid training'
+      - 'EMT certification'
+      - 'clinical education'
+      - 'emergency preparedness'
 
   - name: prescription_advice
     description: >
       Fires on queries that request or imply specific medication
       prescriptions or recommendations.
     patterns:
-      - "prescribe this"
-      - "recommend medication"
-      - "start taking"
-      - "you should take"
+      - 'prescribe this'
+      - 'recommend medication'
+      - 'start taking'
+      - 'you should take'
     exclude_context:
-      - "patient education"
-      - "medication overview"
-      - "general information"
-      - "how medications work"
+      - 'patient education'
+      - 'medication overview'
+      - 'general information'
+      - 'how medications work'
 
   - name: diagnostic_claims
     description: >
       Fires on queries where the model might make definitive diagnostic
       claims that require professional medical judgment.
     patterns:
-      - "you have cancer"
-      - "you are diagnosed"
-      - "definitive diagnosis"
-      - "you definitely have"
+      - 'you have cancer'
+      - 'you are diagnosed'
+      - 'definitive diagnosis'
+      - 'you definitely have'
     exclude_context:
-      - "hypothetical scenario"
-      - "case study discussion"
-      - "medical education"
-      - "diagnostic criteria overview"
+      - 'hypothetical scenario'
+      - 'case study discussion'
+      - 'medical education'
+      - 'diagnostic criteria overview'
 
 risk_signals:
   - name: dosage_numbers
-    description: "Queries involving weight-based or pediatric dosing calculations"
+    description: 'Queries involving weight-based or pediatric dosing calculations'
     patterns:
-      - "mg/kg"
-      - "mcg/kg"
-      - "units/kg"
-      - "weight-based dosing"
-      - "pediatric dose"
+      - 'mg/kg'
+      - 'mcg/kg'
+      - 'units/kg'
+      - 'weight-based dosing'
+      - 'pediatric dose'
     weight: 0.8
     category: registered
     exclude_context:
-      - "pharmacology reference"
-      - "textbook table"
+      - 'pharmacology reference'
+      - 'textbook table'
 
   - name: medication_names
-    description: "Queries referencing specific medication forms or delivery methods"
+    description: 'Queries referencing specific medication forms or delivery methods'
     patterns:
-      - "tablet"
-      - "capsule"
-      - "injection"
-      - "oral solution"
+      - 'tablet'
+      - 'capsule'
+      - 'injection'
+      - 'oral solution'
     weight: 0.6
     category: universal
     exclude_context:
-      - "general description"
-      - "how are drugs made"
-      - "manufacturing process"
+      - 'general description'
+      - 'how are drugs made'
+      - 'manufacturing process'
 
   - name: symptom_clusters
-    description: "Queries describing clinical presentations or symptom patterns"
+    description: 'Queries describing clinical presentations or symptom patterns'
     patterns:
-      - "presenting with"
-      - "complains of"
-      - "chief complaint"
-      - "symptoms include"
+      - 'presenting with'
+      - 'complains of'
+      - 'chief complaint'
+      - 'symptoms include'
     weight: 0.5
     category: registered
     exclude_context:
-      - "medical drama"
-      - "fiction"
+      - 'medical drama'
+      - 'fiction'
 
   - name: treatment_protocols
-    description: "Queries about specific treatment standards or clinical protocols"
+    description: 'Queries about specific treatment standards or clinical protocols'
     patterns:
-      - "treatment for"
-      - "first-line therapy"
-      - "standard of care"
-      - "clinical protocol"
+      - 'treatment for'
+      - 'first-line therapy'
+      - 'standard of care'
+      - 'clinical protocol'
     weight: 0.6
     category: registered
     exclude_context:
-      - "historical treatment"
-      - "general overview"
+      - 'historical treatment'
+      - 'general overview'
 
   - name: lab_values
-    description: "Queries about laboratory reference ranges and critical values"
+    description: 'Queries about laboratory reference ranges and critical values'
     patterns:
-      - "normal range"
-      - "reference range"
-      - "critical value"
+      - 'normal range'
+      - 'reference range'
+      - 'critical value'
     weight: 0.7
     category: registered
     exclude_context:
-      - "general biology"
-      - "science class"
+      - 'general biology'
+      - 'science class'
 
   - name: medical_procedures
-    description: "Queries about specific surgical or interventional procedures"
+    description: 'Queries about specific surgical or interventional procedures'
     patterns:
-      - "surgical procedure"
-      - "biopsy"
-      - "catheterization"
+      - 'surgical procedure'
+      - 'biopsy'
+      - 'catheterization'
     weight: 0.5
     category: registered
     exclude_context:
-      - "medical history"
-      - "documentary"
+      - 'medical history'
+      - 'documentary'
 
   - name: time_sensitive_medical
-    description: "Queries about acute or time-critical medical situations"
+    description: 'Queries about acute or time-critical medical situations'
     patterns:
-      - "acute onset"
-      - "emergency"
-      - "immediate attention"
-      - "urgent care"
+      - 'acute onset'
+      - 'emergency'
+      - 'immediate attention'
+      - 'urgent care'
     weight: 0.8
     category: registered
     exclude_context:
-      - "general definition"
-      - "what does urgent mean"
+      - 'general definition'
+      - 'what does urgent mean'
 
   - name: off_label
-    description: "Queries about off-label or unapproved medication uses"
+    description: 'Queries about off-label or unapproved medication uses'
     patterns:
-      - "off-label"
-      - "unapproved use"
-      - "not FDA approved"
-      - "experimental use"
+      - 'off-label'
+      - 'unapproved use'
+      - 'not FDA approved'
+      - 'experimental use'
     weight: 0.6
     category: registered
     exclude_context:
-      - "regulatory overview"
-      - "FDA process"
+      - 'regulatory overview'
+      - 'FDA process'
 
 uncertainty_types:
   - name: epistemic

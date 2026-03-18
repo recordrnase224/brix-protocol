@@ -1,6 +1,6 @@
 metadata:
   name: hr
-  version: "1.0.0"
+  version: '1.0.0'
   domain: hr
   description: >
     BRIX specification for HR systems, hiring tools, and workplace AI
@@ -11,10 +11,10 @@ metadata:
   model_compatibility:
     - model_family: gpt-4
       status: community
-      notes: "Community-tested with GPT-4 for HR information queries"
+      notes: 'Community-tested with GPT-4 for HR information queries'
     - model_family: claude-3
       status: community
-      notes: "Community-tested with Claude 3 for HR compliance"
+      notes: 'Community-tested with Claude 3 for HR compliance'
 
 circuit_breakers:
   - name: discrimination_risk
@@ -22,146 +22,146 @@ circuit_breakers:
       Fires on queries that suggest discriminatory hiring practices or
       exclusion of candidates based on non-job-related criteria.
     patterns:
-      - "do not hire"
-      - "avoid candidates who"
-      - "prefer candidates without"
-      - "exclude applicants"
+      - 'do not hire'
+      - 'avoid candidates who'
+      - 'prefer candidates without'
+      - 'exclude applicants'
     exclude_context:
-      - "anti-discrimination training"
-      - "compliance education"
-      - "what not to do"
-      - "HR best practices"
+      - 'anti-discrimination training'
+      - 'compliance education'
+      - 'what not to do'
+      - 'HR best practices'
 
   - name: protected_characteristics
     description: >
       Fires when protected characteristics are referenced in a hiring
       decision context, where such use may violate employment law.
     patterns:
-      - "too old to hire"
-      - "wrong gender for"
-      - "religious beliefs disqualify"
-      - "disability prevents hiring"
-      - "national origin concern"
+      - 'too old to hire'
+      - 'wrong gender for'
+      - 'religious beliefs disqualify'
+      - 'disability prevents hiring'
+      - 'national origin concern'
     exclude_context:
-      - "diversity training"
-      - "EEO compliance"
-      - "anti-discrimination policy"
-      - "protected class education"
-      - "legal requirements"
+      - 'diversity training'
+      - 'EEO compliance'
+      - 'anti-discrimination policy'
+      - 'protected class education'
+      - 'legal requirements'
 
   - name: wrongful_termination
     description: >
       Fires on queries suggesting termination without proper process
       or legal basis, exposing the organization to liability.
     patterns:
-      - "fire them immediately"
-      - "terminate without cause"
-      - "dismiss without process"
+      - 'fire them immediately'
+      - 'terminate without cause'
+      - 'dismiss without process'
     exclude_context:
-      - "termination procedures"
-      - "HR policy overview"
-      - "employment law basics"
-      - "what to avoid"
+      - 'termination procedures'
+      - 'HR policy overview'
+      - 'employment law basics'
+      - 'what to avoid'
 
   - name: harassment_facilitation
     description: >
       Fires on queries seeking to circumvent HR processes or hide
       workplace misconduct.
     patterns:
-      - "how to avoid HR"
-      - "hide from management"
-      - "off the record warning"
+      - 'how to avoid HR'
+      - 'hide from management'
+      - 'off the record warning'
     exclude_context:
-      - "harassment prevention"
-      - "management training"
-      - "compliance course"
-      - "policy development"
+      - 'harassment prevention'
+      - 'management training'
+      - 'compliance course'
+      - 'policy development'
 
 risk_signals:
   - name: compensation_data
-    description: "Queries about specific salary ranges, pay bands, or equity grants"
+    description: 'Queries about specific salary ranges, pay bands, or equity grants'
     patterns:
-      - "salary range"
-      - "pay band"
-      - "compensation package"
-      - "equity grant"
+      - 'salary range'
+      - 'pay band'
+      - 'compensation package'
+      - 'equity grant'
     weight: 0.7
     category: registered
     exclude_context:
-      - "compensation philosophy"
-      - "how pay works"
-      - "general overview"
+      - 'compensation philosophy'
+      - 'how pay works'
+      - 'general overview'
 
   - name: performance_claims
-    description: "Queries involving performance evaluations or improvement plans"
+    description: 'Queries involving performance evaluations or improvement plans'
     patterns:
-      - "poor performer"
-      - "underperforming"
-      - "performance improvement plan"
-      - "PIP"
+      - 'poor performer'
+      - 'underperforming'
+      - 'performance improvement plan'
+      - 'PIP'
     weight: 0.6
     category: registered
     exclude_context:
-      - "performance management basics"
-      - "how reviews work"
-      - "general HR process"
+      - 'performance management basics'
+      - 'how reviews work'
+      - 'general HR process'
 
   - name: legal_obligations
-    description: "Queries about employment-related legal requirements"
+    description: 'Queries about employment-related legal requirements'
     patterns:
-      - "FMLA"
-      - "ADA accommodation"
-      - "EEOC"
-      - "Title VII"
+      - 'FMLA'
+      - 'ADA accommodation'
+      - 'EEOC'
+      - 'Title VII'
     weight: 0.8
     category: registered
     exclude_context:
-      - "employment law overview"
-      - "HR certification study"
-      - "general information"
+      - 'employment law overview'
+      - 'HR certification study'
+      - 'general information'
 
   - name: hiring_criteria
-    description: "Queries about specific job requirements that may have discriminatory impact"
+    description: 'Queries about specific job requirements that may have discriminatory impact'
     patterns:
-      - "must have"
-      - "required background"
-      - "years of experience required"
-      - "degree required"
+      - 'must have'
+      - 'required background'
+      - 'years of experience required'
+      - 'degree required'
     weight: 0.7
     category: universal
     exclude_context:
-      - "job posting template"
-      - "best practices"
-      - "general advice"
-      - "how to write"
+      - 'job posting template'
+      - 'best practices'
+      - 'general advice'
+      - 'how to write'
 
   - name: termination_process
-    description: "Queries about specific termination procedures and legal requirements"
+    description: 'Queries about specific termination procedures and legal requirements'
     patterns:
-      - "termination letter"
-      - "severance agreement"
-      - "final paycheck"
-      - "COBRA"
+      - 'termination letter'
+      - 'severance agreement'
+      - 'final paycheck'
+      - 'COBRA'
     weight: 0.8
     category: registered
     exclude_context:
-      - "HR process overview"
-      - "employee handbook"
-      - "general policy"
+      - 'HR process overview'
+      - 'employee handbook'
+      - 'general policy'
 
   - name: workplace_investigations
-    description: "Queries about harassment complaints, investigations, and witness statements"
+    description: 'Queries about harassment complaints, investigations, and witness statements'
     patterns:
-      - "harassment complaint"
-      - "investigation report"
-      - "witness statement"
-      - "HR investigation"
+      - 'harassment complaint'
+      - 'investigation report'
+      - 'witness statement'
+      - 'HR investigation'
     weight: 0.9
     category: registered
     exclude_context:
-      - "investigation training"
-      - "compliance course"
-      - "how investigations work"
+      - 'investigation training'
+      - 'compliance course'
+      - 'how investigations work'
 
 uncertainty_types:
   - name: epistemic

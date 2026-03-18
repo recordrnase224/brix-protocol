@@ -1,6 +1,6 @@
 metadata:
   name: legal
-  version: "1.0.0"
+  version: '1.0.0'
   domain: legal
   description: >
     BRIX specification for legal research platforms and compliance tools.
@@ -11,10 +11,10 @@ metadata:
   model_compatibility:
     - model_family: gpt-4
       status: community
-      notes: "Community-tested with GPT-4 for legal research queries"
+      notes: 'Community-tested with GPT-4 for legal research queries'
     - model_family: claude-3
       status: community
-      notes: "Community-tested with Claude 3 for legal analysis"
+      notes: 'Community-tested with Claude 3 for legal analysis'
 
 circuit_breakers:
   - name: jurisdictional_requirements
@@ -22,167 +22,167 @@ circuit_breakers:
       Fires on queries about jurisdiction-specific legal mandates where
       incorrect information could lead to non-compliance.
     patterns:
-      - "jurisdiction requires"
-      - "mandatory in"
-      - "legally required in"
-      - "statutory requirement"
+      - 'jurisdiction requires'
+      - 'mandatory in'
+      - 'legally required in'
+      - 'statutory requirement'
     exclude_context:
-      - "comparative law"
-      - "academic survey"
-      - "historical analysis"
-      - "law school"
+      - 'comparative law'
+      - 'academic survey'
+      - 'historical analysis'
+      - 'law school'
 
   - name: statute_of_limitations
     description: >
       Fires on queries about limitation periods where missed deadlines
       can permanently extinguish legal rights.
     patterns:
-      - "statute of limitations"
-      - "filing deadline"
-      - "time-barred"
-      - "limitation period"
+      - 'statute of limitations'
+      - 'filing deadline'
+      - 'time-barred'
+      - 'limitation period'
     exclude_context:
-      - "legal history"
-      - "policy discussion"
-      - "reform proposal"
-      - "general concept"
+      - 'legal history'
+      - 'policy discussion'
+      - 'reform proposal'
+      - 'general concept'
 
   - name: procedural_deadlines
     description: >
       Fires on queries about court-imposed deadlines where late filing
       results in default judgment or waiver of rights.
     patterns:
-      - "must file by"
-      - "deadline to respond"
-      - "court deadline"
-      - "response due"
+      - 'must file by'
+      - 'deadline to respond'
+      - 'court deadline'
+      - 'response due'
     exclude_context:
-      - "hypothetical scenario"
-      - "moot court"
-      - "practice exercise"
-      - "exam question"
+      - 'hypothetical scenario'
+      - 'moot court'
+      - 'practice exercise'
+      - 'exam question'
 
   - name: legal_advice
     description: >
       Fires on queries where the model might provide specific legal
       recommendations that constitute unauthorized practice of law.
     patterns:
-      - "you should sue"
-      - "my legal advice is"
-      - "I advise you to"
-      - "legal recommendation"
+      - 'you should sue'
+      - 'my legal advice is'
+      - 'I advise you to'
+      - 'legal recommendation'
     exclude_context:
-      - "legal writing example"
-      - "template language"
-      - "sample letter"
-      - "educational example"
+      - 'legal writing example'
+      - 'template language'
+      - 'sample letter'
+      - 'educational example'
 
   - name: criminal_liability
     description: >
       Fires on queries about criminal exposure where incorrect
       information could lead to self-incrimination or failed defense.
     patterns:
-      - "criminal liability"
-      - "felony charge"
-      - "criminal offense"
-      - "prosecution risk"
+      - 'criminal liability'
+      - 'felony charge'
+      - 'criminal offense'
+      - 'prosecution risk'
     exclude_context:
-      - "criminal law textbook"
-      - "law school course"
-      - "academic research"
-      - "policy analysis"
+      - 'criminal law textbook'
+      - 'law school course'
+      - 'academic research'
+      - 'policy analysis'
 
 risk_signals:
   - name: case_citations
-    description: "Queries referencing specific cases or litigation parties"
+    description: 'Queries referencing specific cases or litigation parties'
     patterns:
-      - "plaintiff"
-      - "defendant"
-      - "docket number"
-      - "case number"
+      - 'plaintiff'
+      - 'defendant'
+      - 'docket number'
+      - 'case number'
     weight: 0.7
     category: registered
     exclude_context:
-      - "fictional case"
-      - "example scenario"
+      - 'fictional case'
+      - 'example scenario'
 
   - name: regulatory_references
-    description: "Queries citing specific regulatory codes or statutes"
+    description: 'Queries citing specific regulatory codes or statutes'
     patterns:
-      - "CFR"
-      - "USC"
-      - "code section"
-      - "subsection"
+      - 'CFR'
+      - 'USC'
+      - 'code section'
+      - 'subsection'
     weight: 0.8
     category: registered
     exclude_context:
-      - "general overview"
-      - "how laws are organized"
+      - 'general overview'
+      - 'how laws are organized'
 
   - name: jurisdiction_specific
-    description: "Queries about jurisdiction-specific legal rules"
+    description: 'Queries about jurisdiction-specific legal rules'
     patterns:
-      - "under California law"
-      - "federal law requires"
-      - "state law"
-      - "EU regulation"
+      - 'under California law'
+      - 'federal law requires'
+      - 'state law'
+      - 'EU regulation'
     weight: 0.7
     category: registered
     exclude_context:
-      - "comparative study"
-      - "general differences"
+      - 'comparative study'
+      - 'general differences'
 
   - name: contract_terms
-    description: "Queries about specific contractual obligations or provisions"
+    description: 'Queries about specific contractual obligations or provisions'
     patterns:
-      - "breach of contract"
-      - "contractual obligation"
-      - "indemnification"
-      - "liability clause"
+      - 'breach of contract'
+      - 'contractual obligation'
+      - 'indemnification'
+      - 'liability clause'
     weight: 0.6
     category: registered
     exclude_context:
-      - "contract law basics"
-      - "general definition"
+      - 'contract law basics'
+      - 'general definition'
 
   - name: compliance_obligations
-    description: "Queries about mandatory compliance requirements"
+    description: 'Queries about mandatory compliance requirements'
     patterns:
-      - "must comply"
-      - "required by law"
-      - "regulatory compliance"
-      - "audit requirement"
+      - 'must comply'
+      - 'required by law'
+      - 'regulatory compliance'
+      - 'audit requirement'
     weight: 0.8
     category: registered
     exclude_context:
-      - "compliance overview"
-      - "what is compliance"
+      - 'compliance overview'
+      - 'what is compliance'
 
   - name: legal_deadlines
-    description: "Queries about specific filing or response deadlines"
+    description: 'Queries about specific filing or response deadlines'
     patterns:
-      - "response required by"
-      - "due date"
-      - "expiration"
+      - 'response required by'
+      - 'due date'
+      - 'expiration'
     weight: 0.9
     category: registered
     exclude_context:
-      - "general process"
-      - "how courts work"
+      - 'general process'
+      - 'how courts work'
 
   - name: damages_claims
-    description: "Queries about damages, compensation, or settlement amounts"
+    description: 'Queries about damages, compensation, or settlement amounts'
     patterns:
-      - "damages"
-      - "compensation"
-      - "settlement"
-      - "punitive"
+      - 'damages'
+      - 'compensation'
+      - 'settlement'
+      - 'punitive'
     weight: 0.7
     category: universal
     exclude_context:
-      - "legal theory"
-      - "types of damages"
-      - "general definition"
+      - 'legal theory'
+      - 'types of damages'
+      - 'general definition'
 
 uncertainty_types:
   - name: epistemic

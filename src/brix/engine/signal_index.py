@@ -8,11 +8,22 @@ rebuilt only when the specification changes.
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass
 
 import ahocorasick
 
 from brix.spec.models import SpecModel
+
+
+def _normalize(text: str) -> str:
+    """Apply Unicode NFKC normalization and collapse whitespace.
+
+    Converts non-breaking spaces, soft hyphens, and other Unicode
+    variants to their canonical forms, then collapses all whitespace
+    runs (including line breaks) into single spaces.
+    """
+    return " ".join(unicodedata.normalize("NFKC", text).split())
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +33,8 @@ class SignalMatch:
     signal_name: str
     signal_type: str  # "circuit_breaker" or "risk_signal"
     pattern: str
+    # NOTE: end_position refers to position in the normalized text,
+    # not the original input text.
     end_position: int
 
 
@@ -38,35 +51,28 @@ class SignalIndex:
         self._build(spec)
 
     def _build(self, spec: SpecModel) -> None:
-        """Compile all patterns into the Aho-Corasick automaton."""
+        """Compile all patterns into the Aho-Corasick automaton.
+
+        Accumulates all values per normalized key in a plain dict first,
+        then calls add_word() once per key with the complete final list,
+        then make_automaton(). No mutation between add_word and make_automaton.
+        """
+        pending: dict[str, list[tuple[str, str, str]]] = {}
+
         for cb in spec.circuit_breakers:
             for pattern in cb.patterns:
-                key = pattern.lower()
+                key = _normalize(pattern).lower()
                 value = (cb.name, "circuit_breaker", pattern)
-                # ahocorasick allows duplicate keys; we store a list
-                existing = self._automaton.get(key, None)
-                if existing is not None:
-                    if isinstance(existing, list):
-                        existing.append(value)
-                    else:
-                        self._automaton.add_word(key, [existing, value])
-                        continue
-                else:
-                    self._automaton.add_word(key, [value])
+                pending.setdefault(key, []).append(value)
 
         for signal in spec.risk_signals:
             for pattern in signal.patterns:
-                key = pattern.lower()
+                key = _normalize(pattern).lower()
                 value = (signal.name, "risk_signal", pattern)
-                existing = self._automaton.get(key, None)
-                if existing is not None:
-                    if isinstance(existing, list):
-                        existing.append(value)
-                    else:
-                        self._automaton.add_word(key, [existing, value])
-                        continue
-                else:
-                    self._automaton.add_word(key, [value])
+                pending.setdefault(key, []).append(value)
+
+        for key, values in pending.items():
+            self._automaton.add_word(key, values)
 
         self._automaton.make_automaton()
 
@@ -83,7 +89,7 @@ class SignalIndex:
             return []
 
         matches: list[SignalMatch] = []
-        lowered = text.lower()
+        lowered = _normalize(text).lower()
 
         for end_pos, values in self._automaton.iter(lowered):
             for signal_name, signal_type, pattern in values:

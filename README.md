@@ -6,10 +6,10 @@
 
 _Enforce deterministic rules. Measure the Balance Index. Audit every decision._
 
-[![PyPI version](https://img.shields.io/pypi/v/brix-protocol?cache=no)](https://pypi.org/project/brix-protocol/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/brix-protocol?cachebust=0)](https://pypi.org/project/brix-protocol/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)]()
 
 </div>
 
@@ -128,7 +128,7 @@ Multiple samples are collected **in parallel** via `asyncio.gather()` and analyz
 
 ### StructuredResult
 
-Every call returns a complete `StructuredResult` containing: uncertainty type, action taken, response, circuit breaker status, triggered signals, risk score, Balance Index, decision UUID, latency, token cost, and model compatibility status. Every decision is auditable via `brix explain`.
+Every call returns a complete `StructuredResult` containing: uncertainty type, action taken, response, circuit breaker status, triggered signals, risk score, Balance Index, decision UUID, latency, token cost, model compatibility status, `response_requires_verification` (whether the response needs external verification), `unverified_draft` (raw LLM output for internal processing), `retrieval_executed`/`retrieval_sources` (RAG status), `sampler_partial_failure` (degraded sampling), and `output_result` (output guard analysis). Every decision is auditable via `brix explain`.
 
 ---
 
@@ -185,17 +185,19 @@ sampling_config:
   low_threshold: 0.40
   medium_threshold: 0.70
   temperature: 0.7
+  max_tokens: 1024
 ```
 
 ### Schema Reference
 
-| Section             | Required | Description                                                     |
-| ------------------- | -------- | --------------------------------------------------------------- |
-| `metadata`          | Yes      | Name, version, domain, model compatibility records              |
-| `circuit_breakers`  | No       | Binary rules with patterns and optional exclude_context         |
-| `risk_signals`      | No       | Weighted signals (registered or universal) with exclude_context |
-| `uncertainty_types` | No       | Per-type action configuration                                   |
-| `sampling_config`   | No       | Tier thresholds and sampling parameters (sensible defaults)     |
+| Section             | Required | Description                                                                |
+| ------------------- | -------- | -------------------------------------------------------------------------- |
+| `metadata`          | Yes      | Name, version, domain, model compatibility records                         |
+| `circuit_breakers`  | No       | Binary rules with patterns and optional exclude_context                    |
+| `risk_signals`      | No       | Weighted signals (registered or universal) with exclude_context            |
+| `uncertainty_types` | No       | Per-type action configuration                                              |
+| `sampling_config`   | No       | Tier thresholds, sampling parameters, and `max_tokens` (sensible defaults) |
+| `output_signals`    | No       | Response-side signals with `signal_type: risk\|block` for output guard     |
 
 ---
 
@@ -336,6 +338,95 @@ client = MockLLMClient(responses=["Response A", "Response B"])
 class MyClient:
     async def complete(self, prompt, *, system=None, temperature=0.7, max_tokens=1024):
         return "my response"
+```
+
+---
+
+## Output Guard
+
+BRIX can scan LLM responses for risky content using the same Aho-Corasick infrastructure. Enable it on the router:
+
+```python
+router = BrixRouter(llm_client=client, spec=spec, enable_output_guard=True)
+result = await router.process("What treatment do you recommend?")
+
+if result.output_result and result.output_result.output_blocked:
+    print("Response blocked:", result.output_result.output_block_signal)
+```
+
+Define output signals in your spec with `signal_type: block` (hard block) or `signal_type: risk` (scored):
+
+```yaml
+output_signals:
+  - name: definitive_diagnosis
+    patterns: ['you have', 'you are diagnosed']
+    weight: 0.9
+    signal_type: block
+```
+
+For standalone use outside BrixRouter:
+
+```python
+from brix import OutputGuard, load_spec
+
+guard = OutputGuard(load_spec("my_spec.yaml"))
+result = await guard.analyze(response_text, query=original_query)
+```
+
+---
+
+## Retrieval Provider
+
+When BRIX detects epistemic uncertainty, it can execute real RAG instead of just signaling `force_retrieval`. Implement the `RetrievalProvider` protocol:
+
+```python
+from brix import RetrievalProvider, RetrievalResult
+
+class MyRAG:
+    async def retrieve(self, query: str, *, max_results: int = 3) -> RetrievalResult:
+        docs = await my_vector_db.search(query, limit=max_results)
+        return RetrievalResult(
+            content="\n".join(d.text for d in docs),
+            score=docs[0].score,
+            sources=[d.url for d in docs],
+        )
+
+router = BrixRouter(llm_client=client, retrieval_provider=MyRAG())
+```
+
+When retrieval executes, `result.retrieval_executed` is `True` and `result.retrieval_sources` contains the source list. If retrieval fails, BRIX falls back gracefully with `result.retrieval_failed = True`.
+
+---
+
+## Console Output
+
+BRIX provides optional one-line terminal feedback for each request. It activates automatically in TTY terminals and can be controlled via environment variables:
+
+```
+BRIX_CONSOLE=1    # Force on (even in pipes)
+BRIX_CONSOLE=0    # Force off (even in terminals)
+BRIX_VERBOSE=1    # Show signals, retrieval status, decision ID
+```
+
+Example output:
+
+```
+  OK  Safe -- passed through         risk 0.04   balance 0.892   12ms
+  !   Elevated -- retrieval needed   risk 0.73   balance 0.871   87ms
+  X   Blocked -- drug_dosing         risk 1.00   balance 0.864   43ms
+```
+
+---
+
+## System Prompt
+
+Pass a consistent system prompt to all LLM sampling calls:
+
+```python
+router = BrixRouter(
+    llm_client=client,
+    system_prompt="You are a medical information assistant. Always cite sources.",
+)
 ```
 
 ---

@@ -88,7 +88,21 @@ def _display_trace(record: dict) -> None:
     risk_table.add_column("Value")
     risk_table.add_row("Risk Score", f"{record.get('risk_score', 0.0):.4f}")
     risk_table.add_row("Circuit Breaker Hit", str(cb_hit))
+
+    # Show response_requires_verification if present and True
+    if record.get("response_requires_verification", False):
+        risk_table.add_row(
+            "Response Requires Verification",
+            "[red]True[/red]",
+        )
+
     console.print(risk_table)
+
+    # Sampler warning
+    if record.get("sampler_partial_failure", False):
+        console.print(
+            "\n[yellow]⚠ Sampler partial failure: not all samples were collected[/yellow]"
+        )
 
     # Uncertainty classification
     class_table = Table(title="Uncertainty Classification")
@@ -99,6 +113,43 @@ def _display_trace(record: dict) -> None:
     class_table.add_row("Action Taken", record.get("action_taken", "N/A"))
     class_table.add_row("Intervention Necessary", str(record.get("intervention_necessary", False)))
     console.print(class_table)
+
+    # Retrieval section
+    if record.get("retrieval_executed", False):
+        ret_table = Table(title="Retrieval")
+        ret_table.add_column("Field", style="bold")
+        ret_table.add_column("Value")
+        ret_table.add_row("Retrieval Executed", "[green]True[/green]")
+        ret_table.add_row("Retrieval Failed", str(record.get("retrieval_failed", False)))
+        sources = record.get("retrieval_sources", [])
+        ret_table.add_row("Sources", ", ".join(sources) if sources else "(none)")
+        console.print(ret_table)
+    elif record.get("retrieval_failed", False):
+        console.print("\n[red]Retrieval was attempted but failed[/red]")
+
+    # Output guard section
+    output_result = record.get("output_result")
+    if output_result is not None:
+        out_table = Table(title="Output Guard")
+        out_table.add_column("Field", style="bold")
+        out_table.add_column("Value")
+        blocked = output_result.get("output_blocked", False)
+        out_table.add_row(
+            "Output Blocked",
+            f"[red]True[/red]" if blocked else "[green]False[/green]",
+        )
+        out_table.add_row(
+            "Output Risk Score",
+            f"{output_result.get('output_risk_score', 0.0):.4f}",
+        )
+        out_signals = output_result.get("output_signals_triggered", [])
+        out_table.add_row(
+            "Signals Triggered",
+            ", ".join(out_signals) if out_signals else "(none)",
+        )
+        if output_result.get("output_block_signal"):
+            out_table.add_row("Block Signal", output_result["output_block_signal"])
+        console.print(out_table)
 
     # Metrics
     metrics_table = Table(title="Metrics")
