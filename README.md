@@ -72,15 +72,15 @@ asyncio.run(main())
 
 ## The Guard System
 
-| Guard | Activated by | Guarantee |
-|-------|-------------|-----------|
-| **BudgetGuard** | `max_cost_usd` | No tokens spent after budget exhausted |
-| **RateLimitGuard** | `requests_per_minute` | Average throughput ≤ configured rate |
-| **TimeoutGuard** | `per_call/per_step/total_timeout` | `asyncio.wait_for` absolute — no call outlives limit |
-| **ObservabilityGuard** | _always active_ | Every call in buffer; SHA-256 chained audit log |
-| **SchemaGuard** | `response_schema` | Return value is valid Pydantic instance or raises |
-| **RetryGuard** | `max_retries` | Transient errors retried with jittered exponential backoff |
-| **RegulatedGuard** | `regulated_spec` | Circuit breakers + risk scoring for regulated domains |
+| Guard                  | Activated by                      | Guarantee                                                  |
+| ---------------------- | --------------------------------- | ---------------------------------------------------------- |
+| **BudgetGuard**        | `max_cost_usd`                    | No tokens spent after budget exhausted                     |
+| **RateLimitGuard**     | `requests_per_minute`             | Average throughput ≤ configured rate                       |
+| **TimeoutGuard**       | `per_call/per_step/total_timeout` | `asyncio.wait_for` absolute — no call outlives limit       |
+| **ObservabilityGuard** | _always active_                   | Every call in buffer; SHA-256 chained audit log            |
+| **SchemaGuard**        | `response_schema`                 | Return value is valid Pydantic instance or raises          |
+| **RetryGuard**         | `max_retries`                     | Transient errors retried with jittered exponential backoff |
+| **RegulatedGuard**     | `regulated_spec`                  | Circuit breakers + risk scoring for regulated domains      |
 
 **Execution order:** `Budget → RateLimit → Timeout → Observability → Schema → Retry → Regulated`
 
@@ -215,20 +215,20 @@ print(result.uncertainty_type)      # UncertaintyType enum
 
 Each entry in `brix_audit.jsonl` contains:
 
-| Field | Description |
-|-------|-------------|
-| `run_id` | UUID4, unique per call |
-| `session_id` | Fixed per `BrixClient` instance |
-| `sequence` | Call counter within session |
-| `timestamp` | ISO 8601 UTC |
-| `model` | Model identifier |
-| `prompt_tokens` / `completion_tokens` | From response usage |
-| `cost_usd` | From BudgetGuard metadata |
-| `latency_ms` | Wall-clock time for the call |
-| `prompt_hash` | SHA-256 of serialized messages |
-| `response_hash` | SHA-256 of response content |
-| `guards_active` | Names of active guards |
-| `chain_hash` | SHA-256 of previous entry's canonical JSON |
+| Field                                 | Description                                |
+| ------------------------------------- | ------------------------------------------ |
+| `run_id`                              | UUID4, unique per call                     |
+| `session_id`                          | Fixed per `BrixClient` instance            |
+| `sequence`                            | Call counter within session                |
+| `timestamp`                           | ISO 8601 UTC                               |
+| `model`                               | Model identifier                           |
+| `prompt_tokens` / `completion_tokens` | From response usage                        |
+| `cost_usd`                            | From BudgetGuard metadata                  |
+| `latency_ms`                          | Wall-clock time for the call               |
+| `prompt_hash`                         | SHA-256 of serialized messages             |
+| `response_hash`                       | SHA-256 of response content                |
+| `guards_active`                       | Names of active guards                     |
+| `chain_hash`                          | SHA-256 of previous entry's canonical JSON |
 
 The `chain_hash` forms a cryptographic chain: the first entry's hash covers `{"genesis": session_id}`; each subsequent hash covers the complete previous entry. Any modification or deletion invalidates all subsequent hashes.
 
@@ -313,13 +313,13 @@ print(result.balance_index)         # running session metric
 
 ### Built-in Specs
 
-| Name | Domain |
-|------|--------|
+| Name        | Domain                       |
+| ----------- | ---------------------------- |
 | `"medical"` | FDA-aligned medical/clinical |
-| `"legal"` | Legal research and advice |
-| `"finance"` | Financial services |
-| `"hr"` | Human resources |
-| `"general"` | General-purpose (default) |
+| `"legal"`   | Legal research and advice    |
+| `"finance"` | Financial services           |
+| `"hr"`      | Human resources              |
+| `"general"` | General-purpose (default)    |
 
 Load custom specs:
 
@@ -367,15 +367,15 @@ result = await guard.analyze(response_text, query=original_query)
 
 All exceptions inherit from `BrixError`.
 
-| Exception | Raised by | Condition |
-|-----------|-----------|-----------|
-| `BrixBudgetError` | BudgetGuard | Cost limit exceeded |
-| `BrixTimeoutError` | TimeoutGuard | Time limit exceeded |
-| `BrixSchemaError` | SchemaGuard | Validation failed after all retries |
-| `BrixGuardBlockedError` | RetryGuard, RegulatedGuard | Request blocked or all retries exhausted |
-| `BrixGuardError` | ObservabilityGuard (`strict_mode=True`) | Guard-internal failure |
-| `BrixReplayError` | `BrixReplayClient` | Missing session file or no recorded response |
-| `BrixConfigurationError` | `BrixClient` | Unsupported or misconfigured LLM client |
+| Exception                | Raised by                               | Condition                                    |
+| ------------------------ | --------------------------------------- | -------------------------------------------- |
+| `BrixBudgetError`        | BudgetGuard                             | Cost limit exceeded                          |
+| `BrixTimeoutError`       | TimeoutGuard                            | Time limit exceeded                          |
+| `BrixSchemaError`        | SchemaGuard                             | Validation failed after all retries          |
+| `BrixGuardBlockedError`  | RetryGuard, RegulatedGuard              | Request blocked or all retries exhausted     |
+| `BrixGuardError`         | ObservabilityGuard (`strict_mode=True`) | Guard-internal failure                       |
+| `BrixReplayError`        | `BrixReplayClient`                      | Missing session file or no recorded response |
+| `BrixConfigurationError` | `BrixClient`                            | Unsupported or misconfigured LLM client      |
 
 ---
 
@@ -383,70 +383,70 @@ All exceptions inherit from `BrixError`.
 
 ### BudgetGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `max_cost_usd` | `float \| None` | `None` | Session cost cap; activates guard |
-| `budget_strategy` | `str` | `"block"` | `"block"` raises; `"warn"` continues |
-| `budget_warning_threshold` | `float` | `0.8` | Warn at this fraction of the limit |
+| Parameter                  | Type            | Default   | Description                          |
+| -------------------------- | --------------- | --------- | ------------------------------------ |
+| `max_cost_usd`             | `float \| None` | `None`    | Session cost cap; activates guard    |
+| `budget_strategy`          | `str`           | `"block"` | `"block"` raises; `"warn"` continues |
+| `budget_warning_threshold` | `float`         | `0.8`     | Warn at this fraction of the limit   |
 
 ### RateLimitGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `requests_per_minute` | `int \| None` | `None` | Target rate cap; activates guard |
-| `adaptive_rate_limiting` | `bool` | `True` | Auto-reduce rate on 429 |
-| `min_rate_floor` | `float` | `0.1` | Effective rate never drops below `max × floor` |
-| `rate_reduction_factor` | `float` | `0.5` | Multiply rate by this on each 429 |
-| `rate_recovery_factor` | `float` | `1.05` | Multiply rate by this on recovery |
-| `recovery_window_seconds` | `float` | `60.0` | Seconds without 429 before recovery |
-| `burst_capacity` | `int \| None` | `None` | Hard cap on token bucket size |
+| Parameter                 | Type          | Default | Description                                    |
+| ------------------------- | ------------- | ------- | ---------------------------------------------- |
+| `requests_per_minute`     | `int \| None` | `None`  | Target rate cap; activates guard               |
+| `adaptive_rate_limiting`  | `bool`        | `True`  | Auto-reduce rate on 429                        |
+| `min_rate_floor`          | `float`       | `0.1`   | Effective rate never drops below `max × floor` |
+| `rate_reduction_factor`   | `float`       | `0.5`   | Multiply rate by this on each 429              |
+| `rate_recovery_factor`    | `float`       | `1.05`  | Multiply rate by this on recovery              |
+| `recovery_window_seconds` | `float`       | `60.0`  | Seconds without 429 before recovery            |
+| `burst_capacity`          | `int \| None` | `None`  | Hard cap on token bucket size                  |
 
 Legacy alias: `rate_limit_rpm` → `requests_per_minute`
 
 ### TimeoutGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `per_call_timeout` | `float \| None` | `None` | Max seconds for single LLM call |
-| `per_step_timeout` | `float \| None` | `None` | Max seconds between consecutive calls |
-| `total_timeout` | `float \| None` | `None` | Max seconds for entire session |
-| `on_timeout` | `str` | `"raise"` | `"raise"` or `"return_partial"` |
+| Parameter          | Type            | Default   | Description                           |
+| ------------------ | --------------- | --------- | ------------------------------------- |
+| `per_call_timeout` | `float \| None` | `None`    | Max seconds for single LLM call       |
+| `per_step_timeout` | `float \| None` | `None`    | Max seconds between consecutive calls |
+| `total_timeout`    | `float \| None` | `None`    | Max seconds for entire session        |
+| `on_timeout`       | `str`           | `"raise"` | `"raise"` or `"return_partial"`       |
 
 Legacy alias: `max_time_seconds` → `per_call_timeout`
 
 ### ObservabilityGuard _(always active)_
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `log_path` | `str \| Path \| None` | `None` | Audit log directory; `None` = buffer-only |
-| `trace_buffer_size` | `int` | `1000` | Max in-memory trace entries |
-| `strict_mode` | `bool` | `False` | Raise on disk write failure |
-| `max_session_records` | `int \| None` | `None` | Rotate DRE file after N records |
+| Parameter             | Type                  | Default | Description                               |
+| --------------------- | --------------------- | ------- | ----------------------------------------- |
+| `log_path`            | `str \| Path \| None` | `None`  | Audit log directory; `None` = buffer-only |
+| `trace_buffer_size`   | `int`                 | `1000`  | Max in-memory trace entries               |
+| `strict_mode`         | `bool`                | `False` | Raise on disk write failure               |
+| `max_session_records` | `int \| None`         | `None`  | Rotate DRE file after N records           |
 
 ### SchemaGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `response_schema` | `type \| None` | `None` | Pydantic model class; activates guard |
-| `max_schema_retries` | `int` | `2` | Max self-healing re-prompt attempts |
-| `inject_schema_in_prompt` | `bool` | `True` | Inject JSON schema in system prompt |
-| `max_healing_seconds` | `float \| None` | `None` | Wall-clock budget for healing loop |
+| Parameter                 | Type            | Default | Description                           |
+| ------------------------- | --------------- | ------- | ------------------------------------- |
+| `response_schema`         | `type \| None`  | `None`  | Pydantic model class; activates guard |
+| `max_schema_retries`      | `int`           | `2`     | Max self-healing re-prompt attempts   |
+| `inject_schema_in_prompt` | `bool`          | `True`  | Inject JSON schema in system prompt   |
+| `max_healing_seconds`     | `float \| None` | `None`  | Wall-clock budget for healing loop    |
 
 ### RetryGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `max_retries` | `int \| None` | `None` | Max retry attempts; activates guard |
-| `backoff_base` | `float` | `2.0` | Exponential backoff base |
-| `max_backoff` | `float` | `60.0` | Max delay between retries (seconds) |
-| `retry_budget_seconds` | `float` | `120.0` | Total time budget for all retry delays |
-| `retry_on` | `list[int] \| None` | `None` | Extra HTTP status codes to retry |
+| Parameter              | Type                | Default | Description                            |
+| ---------------------- | ------------------- | ------- | -------------------------------------- |
+| `max_retries`          | `int \| None`       | `None`  | Max retry attempts; activates guard    |
+| `backoff_base`         | `float`             | `2.0`   | Exponential backoff base               |
+| `max_backoff`          | `float`             | `60.0`  | Max delay between retries (seconds)    |
+| `retry_budget_seconds` | `float`             | `120.0` | Total time budget for all retry delays |
+| `retry_on`             | `list[int] \| None` | `None`  | Extra HTTP status codes to retry       |
 
 ### RegulatedGuard
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `regulated_spec` | `str \| Path \| None` | `None` | Spec path or built-in name; activates guard |
+| Parameter        | Type                  | Default | Description                                 |
+| ---------------- | --------------------- | ------- | ------------------------------------------- |
+| `regulated_spec` | `str \| Path \| None` | `None`  | Spec path or built-in name; activates guard |
 
 ---
 
